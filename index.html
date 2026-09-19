@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="canonical" href="https://thehowlingwhispers.com/" />
+    <meta name="description" content="Howling Whispers is a connected ecosystem for interactive worlds, characters, simulation, worldbuilding, and AI-assisted storytelling. Explore Orbis, Speculus, Fabula, and Mouseion." />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <title>Howling Whispers | Interactive Worlds, AI Simulation & Worldbuilding</title>
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://thehowlingwhispers.com/" />
+    <meta property="og:title" content="Howling Whispers | Interactive Worlds, AI Simulation & Worldbuilding" />
+    <meta property="og:description" content="A connected ecosystem for building, preserving, exploring, and simulating fictional worlds and characters. Orbis, Speculus, Fabula, and Mouseion." />
+    <meta property="og:image" content="https://thehowlingwhispers.com/og-banner.svg" />
+    <meta property="og:site_name" content="Howling Whispers" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://thehowlingwhispers.com/" />
+    <meta name="twitter:title" content="Howling Whispers | Interactive Worlds, AI Simulation & Worldbuilding" />
+    <meta name="twitter:description" content="A connected ecosystem for building, preserving, exploring, and simulating fictional worlds and characters." />
+    <meta name="twitter:image" content="https://thehowlingwhispers.com/og-banner.svg" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Howling Whispers",
+      "url": "https://thehowlingwhispers.com/",
+      "description": "A connected ecosystem for interactive worlds, characters, simulation, worldbuilding, and AI-assisted storytelling.",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Howling Whispers",
+        "url": "https://thehowlingwhispers.com/"
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://lib.thehowlingwhispers.com/all?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <script>
+      (() => {
+        try {
+          const stored = localStorage.getItem('hw.theme');
+          const preference = stored === 'dark' || stored === 'light' || stored === 'auto' ? stored : 'auto';
+          const theme = preference === 'auto'
+            ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+            : preference;
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+        } catch {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+    <link rel="stylesheet" href="/src/styles.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
