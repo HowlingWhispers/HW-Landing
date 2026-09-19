@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { ArrowRight, BookOpen, Box, ExternalLink, Sparkles, Terminal } from 'lucide-react';
+import { ArrowRight, BookOpen, Box, Sparkles, Terminal } from 'lucide-react';
 
 const projects = [
   {
@@ -8,12 +8,11 @@ const projects = [
     tagline: 'The Library of Howling Whispers',
     description:
       'Central archive for worlds, characters, places, factions, items, species, societies, families, memories, and related canon. ' +
-      'Orbis stores and organizes your creative work with full versioning, relationships, and structured data. ' +
+      'Orbis stores and organizes creative work as connected, structured records. ' +
       'Includes <strong>NovelAI integration</strong> for AI-assisted generation where enabled.',
     icon: BookOpen,
     accent: 'var(--accent-orbis)',
     primaryButton: { label: 'Explore Orbis', href: 'https://lib.thehowlingwhispers.com/', external: true },
-    secondaryButton: { label: 'View Project Roadmap', href: 'https://lib.thehowlingwhispers.com/projects/speculus', external: true },
   },
   {
     id: 'speculus',
@@ -21,7 +20,7 @@ const projects = [
     tagline: 'Simulation',
     description:
       'A roleplay and character/world simulation environment connected to content stored in Orbis. ' +
-      'Speculus renders Orbis records into controlled prose simulations with persistent context, relationships, and physical state. ' +
+      'Speculus renders Orbis records into controlled prose simulations with world context, relationships, and generation diagnostics while deeper persistent state is developed. ' +
       '<strong>NovelAI</strong> is one of its supported AI-generation capabilities.',
     icon: Terminal,
     accent: 'var(--accent-speculus)',
@@ -46,12 +45,11 @@ const projects = [
     name: 'Mouseion',
     tagline: 'Creation & Research',
     description:
-      'The creation and research side of the ecosystem: developing and analyzing canonical content, systems, worlds, characters, ' +
-      'and future simulation intelligence. Mouseion feeds Orbis with researched, structured canon and develops the frameworks ' +
-      'that power Speculus and Fabula.',
+      'The planned creation and research side of the ecosystem: developing and analyzing canonical content, systems, worlds, characters, ' +
+      'and future simulation intelligence. Mouseion is intended to work with sanitized research material from the wider ecosystem.',
     icon: Sparkles,
     accent: 'var(--accent-mouseion)',
-    status: 'Early Development',
+    status: 'Planned · Future Research Direction',
   },
 ];
 
@@ -88,17 +86,6 @@ export function Projects() {
                 >
                   <span>{project.primaryButton.label}</span>
                   <ArrowRight size={14} aria-hidden="true" />
-                </a>
-              )}
-              {project.secondaryButton && (
-                <a
-                  href={project.secondaryButton.href}
-                  target={project.secondaryButton.external ? '_blank' : undefined}
-                  rel={project.secondaryButton.external ? 'noopener noreferrer' : undefined}
-                  className="button button--ghost"
-                >
-                  <span>{project.secondaryButton.label}</span>
-                  <ExternalLink size={14} aria-hidden="true" />
                 </a>
               )}
             </div>

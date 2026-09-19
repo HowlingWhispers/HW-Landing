@@ -6,7 +6,7 @@ const stages = [
     id: 'mouseion',
     name: 'Mouseion',
     tagline: 'Creation & Research',
-    description: 'Develops canonical content, systems, worlds, characters, and simulation intelligence frameworks.',
+    description: 'Will support creation and research into canonical content, systems, worlds, characters, and simulation intelligence.',
     icon: Sparkles,
     color: 'var(--accent-mouseion)',
   },
