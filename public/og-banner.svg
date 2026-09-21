@@ -1,12 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
-    <radialGradient id="a" cx="0" cy="0" r="1" gradientTransform="translate(230 120) rotate(34) scale(620 430)" gradientUnits="userSpaceOnUse"><stop stop-color="#294a6c"/><stop offset="1" stop-color="#080b11"/></radialGradient>
-    <radialGradient id="b" cx="0" cy="0" r="1" gradientTransform="translate(1020 490) rotate(-144) scale(490 370)" gradientUnits="userSpaceOnUse"><stop stop-color="#4d3b60" stop-opacity=".75"/><stop offset="1" stop-color="#080b11" stop-opacity="0"/></radialGradient>
-    <pattern id="g" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0v48" fill="none" stroke="#9cb0c8" stroke-opacity=".08"/></pattern>
+    <radialGradient id="a" cx="0" cy="0" r="1" gradientTransform="translate(220 115) rotate(34) scale(640 440)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#294a6c"/>
+      <stop offset="1" stop-color="#080b11"/>
+    </radialGradient>
+    <radialGradient id="b" cx="0" cy="0" r="1" gradientTransform="translate(1020 500) rotate(-144) scale(520 390)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4d3b60" stop-opacity=".78"/>
+      <stop offset="1" stop-color="#080b11" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="g" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0v48" fill="none" stroke="#9cb0c8" stroke-opacity=".08"/>
+    </pattern>
   </defs>
-  <rect width="1200" height="630" fill="#080b11"/><rect width="1200" height="630" fill="url(#a)"/><rect width="1200" height="630" fill="url(#b)"/><rect width="1200" height="630" fill="url(#g)"/>
-  <path d="m600 94 52 52v68l-52 52-52-52v-68l52-52Z" fill="#0c121c" stroke="#efd69f" stroke-width="4"/><path d="M600 126v70M552 162h96" stroke="#8db5d8" stroke-width="3" stroke-linecap="round"/>
-  <text x="600" y="365" fill="#f4f0e9" text-anchor="middle" font-family="Georgia,serif" font-size="70">Howling Whispers</text>
-  <text x="600" y="418" fill="#efd69f" text-anchor="middle" font-family="Georgia,serif" font-size="25">Worlds imagined. Characters remembered. Stories set in motion.</text>
-  <text x="600" y="484" fill="#a5afbd" text-anchor="middle" font-family="Arial,sans-serif" font-size="20">Interactive worlds · AI simulation · worldbuilding · roleplay</text>
+
+  <rect width="1200" height="630" fill="#080b11"/>
+  <rect width="1200" height="630" fill="url(#a)"/>
+  <rect width="1200" height="630" fill="url(#b)"/>
+  <rect width="1200" height="630" fill="url(#g)"/>
+
+  <path d="m600 82 52 52v68l-52 52-52-52v-68l52-52Z" fill="#0c121c" stroke="#efd69f" stroke-width="4"/>
+  <path d="M600 114v70M552 150h96" stroke="#8db5d8" stroke-width="3" stroke-linecap="round"/>
+
+  <text x="600" y="348" fill="#f4f0e9" text-anchor="middle" font-family="Georgia,serif" font-size="72">Howling Whispers</text>
+  <text x="600" y="407" fill="#efd69f" text-anchor="middle" font-family="Georgia,serif" font-size="31">Build worlds that remember.</text>
+
+  <line x1="250" y1="468" x2="950" y2="468" stroke="#c9a86a" stroke-opacity=".36"/>
+
+  <text x="600" y="515" fill="#a5afbd" text-anchor="middle" font-family="Arial,sans-serif" font-size="19" letter-spacing="2">
+    ORBIS   ·   SPECULUS   ·   FABULA   ·   STUDIUM
+  </text>
+  <text x="600" y="554" fill="#6f7a89" text-anchor="middle" font-family="Arial,sans-serif" font-size="16">
+    Canon · Simulation · Persistent Worlds · Research
+  </text>
 </svg>
