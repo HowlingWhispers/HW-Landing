@@ -18,6 +18,7 @@ export function Header() {
         <nav className="nav" aria-label="Main navigation">
           <a href="#ecosystem">Ecosystem</a>
           <a href="#projects">Projects</a>
+          <a href="#utilities">Utilities</a>
           <a href="#community">Community</a>
         </nav>
 
