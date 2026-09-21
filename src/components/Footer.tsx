@@ -2,7 +2,7 @@ import { Github, MessageSquare } from 'lucide-react';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
-  
+
   return (
     <footer className="footer" role="contentinfo">
       <div className="footer-inner">
@@ -18,18 +18,21 @@ export function Footer() {
             <span>HOWLING WHISPERS</span>
           </a>
           <p className="footer-tagline">
-            A connected ecosystem for interactive worlds, characters, simulation, worldbuilding, and AI-assisted storytelling.
+            A connected ecosystem for canon, simulation, persistent interactive worlds, and research.
           </p>
         </div>
+
         <nav className="footer-links" aria-label="Footer navigation">
           <div className="footer-column">
             <h4>Projects</h4>
             <ul>
-              <li><a href="https://lib.thehowlingwhispers.com/" target="_blank" rel="noopener noreferrer">Orbis Library</a></li>
+              <li><a href="https://lib.thehowlingwhispers.com/" target="_blank" rel="noopener noreferrer">Orbis</a></li>
               <li><a href="https://lib.thehowlingwhispers.com/projects/speculus" target="_blank" rel="noopener noreferrer">Speculus</a></li>
               <li><a href="https://lib.thehowlingwhispers.com/projects/fabula" target="_blank" rel="noopener noreferrer">Fabula</a></li>
+              <li><a href="https://github.com/HowlingWhispers/HW-Studium" target="_blank" rel="noopener noreferrer">Studium</a></li>
             </ul>
           </div>
+
           <div className="footer-column">
             <h4>Community</h4>
             <ul>
@@ -47,11 +50,11 @@ export function Footer() {
           </div>
         </nav>
       </div>
+
       <div className="footer-bottom">
         <p>&copy; {currentYear} Howling Whispers. All rights reserved.</p>
         <p className="footer-disclaimer">
-          Howling Whispers integrates with NovelAI for AI generation capabilities. 
-          We are not owned, endorsed, sponsored, or officially operated by NovelAI.
+          Some Howling Whispers tools support third-party AI providers, including NovelAI. Howling Whispers is independent and is not owned, endorsed, sponsored, or operated by NovelAI.
         </p>
       </div>
     </footer>

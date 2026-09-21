@@ -1,20 +1,12 @@
 import type { CSSProperties } from 'react';
-import { ArrowRight, BookOpen, Box, Sparkles, Terminal } from 'lucide-react';
+import { ArrowRight, BookOpen, Box, Search, Terminal } from 'lucide-react';
 
 const stages = [
   {
-    id: 'mouseion',
-    name: 'Mouseion',
-    tagline: 'Creation & Research',
-    description: 'Will support creation and research into canonical content, systems, worlds, characters, and simulation intelligence.',
-    icon: Sparkles,
-    color: 'var(--accent-mouseion)',
-  },
-  {
     id: 'orbis',
     name: 'Orbis',
-    tagline: 'Library & Archive',
-    description: 'Stores and organizes canon with versioning, relationships, and structured data for all record types.',
+    tagline: 'Canon & Library',
+    description: 'Authors create and maintain the canonical people, places, objects, rules, history, and relationships of a world.',
     icon: BookOpen,
     color: 'var(--accent-orbis)',
   },
@@ -22,33 +14,47 @@ const stages = [
     id: 'speculus',
     name: 'Speculus',
     tagline: 'Simulation',
-    description: 'Renders Orbis records into controlled prose simulations with persistent context and physical state.',
+    description: 'Canon is loaded into controlled simulations where characters, scenes, context, and behavior can be tested.',
     icon: Terminal,
     color: 'var(--accent-speculus)',
   },
   {
     id: 'fabula',
     name: 'Fabula',
-    tagline: 'World Runtime',
-    description: 'Turns authored worlds into persistent playable environments with travel, economy, encounters, and state.',
+    tagline: 'Persistent Runtime',
+    description: 'Simulation becomes a lasting world with time, travel, inventory, economy, encounters, consequences, and state.',
     icon: Box,
     color: 'var(--accent-fabula)',
+  },
+  {
+    id: 'studium',
+    name: 'Studium',
+    tagline: 'Research & Feedback',
+    description: 'Runtime and simulation history can be studied for patterns, missing pieces, and possible additions to future canon.',
+    icon: Search,
+    color: 'var(--accent-studium)',
   },
 ];
 
 export function EcosystemFlow() {
   return (
-    <section className="ecosystem" aria-labelledby="ecosystem-title">
+    <section id="ecosystem" className="ecosystem" aria-labelledby="ecosystem-title">
       <div className="section-header">
-        <h2 id="ecosystem-title" className="section-title">Ecosystem Flow</h2>
+        <p className="section-kicker">HOW IT FITS TOGETHER</p>
+        <h2 id="ecosystem-title" className="section-title">A loop, not a pile of separate tools.</h2>
         <p className="section-description">
-          Content flows through the ecosystem from creation to persistent experience. Each layer builds on the last.
+          The projects are designed to hand information forward while keeping canon, simulation, runtime state, and research as distinct responsibilities.
         </p>
       </div>
+
       <div className="flow-container">
         <div className="flow-track">
           {stages.map((stage, index) => (
-            <div key={stage.id} className="flow-stage" style={{ '--stage-color': stage.color } as CSSProperties}>
+            <div
+              key={stage.id}
+              className="flow-stage"
+              style={{ '--stage-color': stage.color } as CSSProperties}
+            >
               <div className="flow-node" aria-hidden="true">
                 <stage.icon size={20} strokeWidth={2} />
               </div>
@@ -65,13 +71,12 @@ export function EcosystemFlow() {
             </div>
           ))}
         </div>
+
+        <div className="flow-feedback">
+          <span className="flow-feedback__label">FEEDBACK LOOP</span>
+          <span>Studium can prepare findings and canon proposals for review, bringing useful discoveries back toward Orbis without silently rewriting the source of truth.</span>
+        </div>
       </div>
-      <p className="flow-summary">
-        <strong>Mouseion</strong> helps create and research. 
-        <strong>Orbis</strong> stores and organizes canon. 
-        <strong>Speculus</strong> simulates characters and scenes. 
-        <strong>Fabula</strong> turns worlds into persistent interactive experiences.
-      </p>
     </section>
   );
 }

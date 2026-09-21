@@ -1,4 +1,4 @@
-import { MessageSquare } from 'lucide-react';
+import { BookOpen, MessageSquare } from 'lucide-react';
 
 export function Header() {
   return (
@@ -14,22 +14,35 @@ export function Header() {
           </span>
           <span className="logo-text">HOWLING WHISPERS</span>
         </a>
+
         <nav className="nav" aria-label="Main navigation">
-          <a href="/">Home</a>
-          <a href="https://lib.thehowlingwhispers.com/" target="_blank" rel="noopener noreferrer">Orbis</a>
+          <a href="#ecosystem">Ecosystem</a>
           <a href="#projects">Projects</a>
           <a href="#community">Community</a>
         </nav>
-        <a 
-          href="https://discord.gg/K3aMbSeYw2" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="header-discord-button"
-          aria-label="Join the Howling Whispers Discord community"
-        >
-          <MessageSquare size={16} aria-hidden="true" />
-          <span>Join Discord</span>
-        </a>
+
+        <div className="header-actions">
+          <a
+            href="https://lib.thehowlingwhispers.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="header-orbis-button"
+            aria-label="Open the Orbis library"
+          >
+            <BookOpen size={15} aria-hidden="true" />
+            <span>Open Orbis</span>
+          </a>
+          <a
+            href="https://discord.gg/K3aMbSeYw2"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="header-discord-button"
+            aria-label="Join the Howling Whispers Discord community"
+          >
+            <MessageSquare size={16} aria-hidden="true" />
+            <span>Discord</span>
+          </a>
+        </div>
       </div>
     </header>
   );

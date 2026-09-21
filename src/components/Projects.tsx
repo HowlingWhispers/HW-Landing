@@ -1,55 +1,50 @@
 import type { CSSProperties } from 'react';
-import { ArrowRight, BookOpen, Box, Sparkles, Terminal } from 'lucide-react';
+import { ArrowRight, BookOpen, Box, Search, Terminal } from 'lucide-react';
 
 const projects = [
   {
     id: 'orbis',
     name: 'Orbis',
-    tagline: 'The Library of Howling Whispers',
+    tagline: 'Canon & Library',
     description:
-      'Central archive for worlds, characters, places, factions, items, species, societies, families, memories, and related canon. ' +
-      'Orbis stores and organizes creative work as connected, structured records. ' +
-      'Includes <strong>NovelAI integration</strong> for AI-assisted generation where enabled.',
+      'The canonical library and worldbuilding platform for Howling Whispers. Orbis stores worlds, characters, places, items, factions, species, societies, families, memories, and the relationships that connect them.',
     icon: BookOpen,
     accent: 'var(--accent-orbis)',
-    primaryButton: { label: 'Explore Orbis', href: 'https://lib.thehowlingwhispers.com/', external: true },
+    primaryButton: { label: 'Enter Orbis', href: 'https://lib.thehowlingwhispers.com/' },
+    status: 'Live · Public Library',
   },
   {
     id: 'speculus',
     name: 'Speculus',
-    tagline: 'Simulation',
+    tagline: 'Simulation Workstation',
     description:
-      'A roleplay and character/world simulation environment connected to content stored in Orbis. ' +
-      'Speculus renders Orbis records into controlled prose simulations with world context, relationships, and generation diagnostics while deeper persistent state is developed. ' +
-      '<strong>NovelAI</strong> is one of its supported AI-generation capabilities.',
+      'An AI roleplay and simulation environment that loads Orbis canon to test characters, scenes, relationships, location context, generation behavior, and evolving simulation systems.',
     icon: Terminal,
     accent: 'var(--accent-speculus)',
-    primaryButton: { label: 'View Speculus Roadmap', href: 'https://lib.thehowlingwhispers.com/projects/speculus', external: true },
-    status: 'Working Concept · Active Testing',
+    primaryButton: { label: 'View Speculus', href: 'https://lib.thehowlingwhispers.com/projects/speculus' },
+    status: 'Active Testing',
   },
   {
     id: 'fabula',
     name: 'Fabula',
-    tagline: 'World Runtime',
+    tagline: 'Persistent World Runtime',
     description:
-      'The future runtime layer where authored worlds become persistent playable environments. ' +
-      'Systems for travel, inventory, economy, encounters, consequences, and character/world state. ' +
-      'Fabula builds on the Orbis archive and Speculus simulation foundation to create living, shared worlds.',
+      'The runtime layer for long-running interactive worlds. Fabula is where travel, time, inventory, economy, jobs, encounters, dice, consequences, and persistent player and world state come together.',
     icon: Box,
     accent: 'var(--accent-fabula)',
-    primaryButton: { label: 'Read Fabula Overview', href: 'https://lib.thehowlingwhispers.com/projects/fabula', external: true },
-    status: 'In Development · Not Publicly Usable',
+    primaryButton: { label: 'View Fabula', href: 'https://lib.thehowlingwhispers.com/projects/fabula' },
+    status: 'In Development',
   },
   {
-    id: 'mouseion',
-    name: 'Mouseion',
-    tagline: 'Creation & Research',
+    id: 'studium',
+    name: 'Studium',
+    tagline: 'Research & Analysis',
     description:
-      'The planned creation and research side of the ecosystem: developing and analyzing canonical content, systems, worlds, characters, ' +
-      'and future simulation intelligence. Mouseion is intended to work with sanitized research material from the wider ecosystem.',
-    icon: Sparkles,
-    accent: 'var(--accent-mouseion)',
-    status: 'Planned · Future Research Direction',
+      'The research and analysis system for Howling Whispers. Studium studies simulation and runtime history, identifies patterns and gaps, and can prepare proposals for new canon to be reviewed before it returns to Orbis.',
+    icon: Search,
+    accent: 'var(--accent-studium)',
+    primaryButton: { label: 'View Studium', href: 'https://github.com/HowlingWhispers/HW-Studium' },
+    status: 'Research Foundation',
   },
 ];
 
@@ -57,14 +52,21 @@ export function Projects() {
   return (
     <section id="projects" className="projects" aria-labelledby="projects-title">
       <div className="section-header">
-        <h2 id="projects-title" className="section-title">Projects</h2>
+        <p className="section-kicker">THE CORE PROJECTS</p>
+        <h2 id="projects-title" className="section-title">Four systems. One shared world.</h2>
         <p className="section-description">
-          Four interconnected tools. One ecosystem. Each serves a distinct purpose in the lifecycle of a fictional world.
+          Each project has a different job. Together they move a world from authored canon to simulation,
+          persistent play, and research without turning everything into one monolithic application.
         </p>
       </div>
+
       <div className="projects-grid">
         {projects.map((project) => (
-          <article key={project.id} className="project-card" style={{ '--project-accent': project.accent } as CSSProperties}>
+          <article
+            key={project.id}
+            className="project-card"
+            style={{ '--project-accent': project.accent } as CSSProperties}
+          >
             <div className="project-header">
               <div className="project-icon" aria-hidden="true">
                 <project.icon size={28} strokeWidth={1.5} />
@@ -74,20 +76,20 @@ export function Projects() {
                 <p className="project-tagline">{project.tagline}</p>
               </div>
             </div>
-            <div className="project-description" dangerouslySetInnerHTML={{ __html: project.description }} />
-            {project.status && <p className="project-status">{project.status}</p>}
+
+            <p className="project-description">{project.description}</p>
+            <p className="project-status">{project.status}</p>
+
             <div className="project-actions">
-              {project.primaryButton && (
-                <a
-                  href={project.primaryButton.href}
-                  target={project.primaryButton.external ? '_blank' : undefined}
-                  rel={project.primaryButton.external ? 'noopener noreferrer' : undefined}
-                  className="button button--primary"
-                >
-                  <span>{project.primaryButton.label}</span>
-                  <ArrowRight size={14} aria-hidden="true" />
-                </a>
-              )}
+              <a
+                href={project.primaryButton.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="button button--primary"
+              >
+                <span>{project.primaryButton.label}</span>
+                <ArrowRight size={14} aria-hidden="true" />
+              </a>
             </div>
           </article>
         ))}
