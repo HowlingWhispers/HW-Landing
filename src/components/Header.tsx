@@ -19,6 +19,7 @@ export function Header() {
           <a href="#ecosystem">Ecosystem</a>
           <a href="#projects">Projects</a>
           <a href="#utilities">Utilities</a>
+          <a href="#legacy">Legacy</a>
           <a href="#community">Community</a>
         </nav>
 
