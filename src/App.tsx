@@ -4,6 +4,7 @@ import { Projects } from './components/Projects';
 import { EcosystemFlow } from './components/EcosystemFlow';
 import { Utilities } from './components/Utilities';
 import { Community } from './components/Community';
+import { Legacy } from './components/Legacy';
 import { Footer } from './components/Footer';
 
 export function App() {
@@ -15,6 +16,7 @@ export function App() {
         <Projects />
         <EcosystemFlow />
         <Utilities />
+        <Legacy />
         <Community />
       </main>
       <Footer />
