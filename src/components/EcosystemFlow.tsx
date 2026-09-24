@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { ArrowRight, BookOpen, Box, Search, Terminal } from 'lucide-react';
+import { ArrowRight, BookOpen, Box, RotateCcw, Search, Terminal } from 'lucide-react';
 
 const stages = [
   {
@@ -33,7 +33,7 @@ const stages = [
     id: 'studium',
     name: 'Studium',
     tagline: 'Research & Feedback',
-    description: 'Research can study simulation history for patterns, gaps, and possible additions that return to Orbis for human review.',
+    description: 'Research studies simulation history for patterns, gaps, and possible additions, then prepares proposals for human review.',
     icon: Search,
     color: 'var(--accent-studium)',
     state: 'In development',
@@ -45,10 +45,10 @@ export function EcosystemFlow() {
     <section id="ecosystem" className="ecosystem ecosystem--roadmap" aria-labelledby="ecosystem-title">
       <div className="section-header">
         <p className="section-kicker">THE LONGER EXPERIMENT</p>
-        <h2 id="ecosystem-title" className="section-title">Where Howling Whispers is heading.</h2>
+        <h2 id="ecosystem-title" className="section-title">A world that can learn without rewriting itself.</h2>
         <p className="section-description">
-          The full ecosystem is a direction, not a promise that every piece is ready today.
-          Orbis and Speculus are the current public-facing systems; Fabula and Studium are still being built.
+          The full ecosystem is designed as a loop. Orbis provides the canon, Speculus explores it,
+          Fabula carries consequences forward, and Studium can return reviewed discoveries back to Orbis as possible new canon.
         </p>
       </div>
 
@@ -78,11 +78,22 @@ export function EcosystemFlow() {
           ))}
         </div>
 
+        <div className="flow-return" aria-label="Studium returns reviewed discoveries to Orbis">
+          <div className="flow-return__line" aria-hidden="true" />
+          <div className="flow-return__content">
+            <RotateCcw size={17} aria-hidden="true" />
+            <strong>Studium → Orbis</strong>
+            <span>
+              Findings become suggestions, not automatic truth. A human reviews them before they can become part of the canon.
+            </span>
+          </div>
+        </div>
+
         <div className="flow-feedback">
-          <span className="flow-feedback__label">THE IDEA</span>
+          <span className="flow-feedback__label">THE CIRCLE</span>
           <span>
-            A world begins as authored canon, becomes something you can roleplay inside, gains persistent systems,
-            and eventually produces discoveries that can be reviewed before anything becomes canon.
+            Canon creates play. Play creates history. History creates discoveries. Reviewed discoveries can enrich canon,
+            and the world begins another turn of the loop.
           </span>
         </div>
       </div>
