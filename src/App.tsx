@@ -60,49 +60,11 @@ const projects: Project[] = [
     category: "Worlds & roleplay",
     status: "Available · Experimental",
     description:
-      "Give your imagination a home. Bring worlds, characters, places, and their shared histories together in one library.",
+      "Build a world and step into its stories. Orbis brings worldbuilding, roleplay, and the connected systems behind them together in one project.",
     icon: BookOpen,
     color: "sage",
     href: ORBIS,
     action: "Enter Orbis",
-  },
-  {
-    name: "Speculus",
-    category: "Worlds & roleplay",
-    status: "Available · Experimental",
-    description:
-      "Step inside the story. Explore scenes and character-driven roleplay using the context of your world.",
-    icon: Terminal,
-    color: "blue",
-    href: ORBIS,
-    action: "Start through Orbis",
-  },
-  {
-    name: "Fabula",
-    category: "Worlds & roleplay",
-    status: "In development",
-    description:
-      "A world with consequences. The planned runtime for time, travel, inventory, economy, and encounters.",
-    icon: Layers3,
-    color: "amber",
-  },
-  {
-    name: "Studium",
-    category: "Worlds & roleplay",
-    status: "Research · In development",
-    description:
-      "Learn from what happens. Study story history and propose discoveries for an author to review as new canon.",
-    icon: Search,
-    color: "rose",
-  },
-  {
-    name: "Mouseion",
-    category: "Worlds & roleplay",
-    status: "Planned creation layer",
-    description:
-      "A workbench for new world content, before it joins the library and finds its place in play.",
-    icon: Wrench,
-    color: "sage",
   },
   {
     name: "EVE Account Hub",
@@ -276,6 +238,13 @@ function ProjectCard({
       </div>
       <h3>{project.name}</h3>
       <p>{project.description}</p>
+      {project.name === "Orbis" && (
+        <div className="project-systems">
+          <a href="#experiment" className="text-link">
+            How the systems connect <ArrowRight size={16} />
+          </a>
+        </div>
+      )}
       {project.href ? (
         <External href={project.href} className="card-link">
           {project.action}
@@ -342,9 +311,11 @@ function Welcome() {
           </a>
         </div>
         <div className="project-grid featured">
-          {projects.slice(0, 2).map((p, i) => (
-            <ProjectCard key={p.name} project={p} number={i + 1} />
-          ))}
+          {projects
+            .filter((p) => p.name === "Orbis")
+            .map((p, i) => (
+              <ProjectCard key={p.name} project={p} number={i + 1} />
+            ))}
         </div>
         <p className="start-note">
           <BookOpen size={16} /> New here? Create or choose a world in Orbis,
@@ -403,8 +374,9 @@ function Projects() {
         of <em>possibilities.</em>
       </h1>
       <p className="page-intro">
-        Worldbuilding is where we began. There is room here for new tools,
-        independent experiments, and entirely different adventures.
+        Orbis brings our worldbuilding and roleplay systems together as one
+        project. There is room alongside it for independent tools, experiments,
+        and entirely different adventures.
       </p>
       <div className="filters" aria-label="Filter projects">
         {["All projects", "Worlds & roleplay", "Utilities"].map((f) => (
@@ -483,7 +455,7 @@ function Experiment() {
   const stage = stages[selected];
   return (
     <section className="section page-section shell">
-      <p className="eyebrow">THE LONGER EXPERIMENT</p>
+      <p className="eyebrow">INSIDE ORBIS</p>
       <h1>
         A story ends.
         <br />
@@ -568,8 +540,9 @@ function Experiment() {
         <div>
           <h3>A direction, not a finished promise.</h3>
           <p>
-            Orbis and Speculus are available experiments. The complete cycle,
-            including Fabula and Studium, is still being built.
+            Orbis is available, with roleplay through Speculus. The complete
+            cycle, including Fabula and Studium, is still being built. Mouseion
+            is planned as the creation layer for new world content.
           </p>
         </div>
       </div>
@@ -645,13 +618,13 @@ function Archive() {
         </p>
         <div className="actions">
           <External
-            href="https://github.com/FreakyHydra/HowlingWhispers/tree/dev"
+            href="https://sandbox.thehowlingwhispers.com/"
             className="button secondary"
           >
-            View legacy source
+            Open Chatty
           </External>
           <External href={`${GITHUB}/HW-Chatty`} className="text-link">
-            Find Chatty
+            View source
           </External>
         </div>
         <span className="panel-footnote">
