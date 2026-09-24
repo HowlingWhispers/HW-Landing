@@ -1,37 +1,41 @@
-import { ArrowRight, BookOpen } from 'lucide-react';
-
-const systems = [
-  ['01', 'Orbis', 'Canon & Library'],
-  ['02', 'Speculus', 'Simulation'],
-  ['03', 'Fabula', 'Persistent Runtime'],
-  ['04', 'Studium', 'Research & Analysis'],
-];
+import { ArrowRight, BookOpen, FlaskConical, Terminal } from 'lucide-react';
 
 export function Hero() {
   return (
-    <section className="hero" aria-labelledby="hero-title">
+    <section className="hero welcome-hero" aria-labelledby="hero-title">
       <div className="hero-background" aria-hidden="true">
         <div className="hero-glow glow-1" />
         <div className="hero-glow glow-2" />
         <div className="hero-glow glow-3" />
         <div className="hero-grid" />
+        <div className="welcome-orb welcome-orb--one" />
+        <div className="welcome-orb welcome-orb--two" />
       </div>
 
-      <div className="hero-content hero-content--split">
-        <div className="hero-copy">
+      <div className="welcome-shell">
+        <div className="welcome-copy">
           <p className="hero-kicker">WELCOME TO HOWLING WHISPERS</p>
-          <h1 id="hero-title" className="hero-title">
-            <span className="hero-title-main">Howling Whispers</span>
-            <span className="hero-title-tagline">Build worlds that remember.</span>
+
+          <h1 id="hero-title" className="hero-title welcome-title">
+            <span className="hero-title-main">Every whisper becomes a world.</span>
           </h1>
 
-          <p className="hero-description">
-            A connected ecosystem for worldbuilding, character simulation, persistent interactive worlds, and research.
-            Orbis preserves the canon. Speculus tests characters and scenes. Fabula carries consequences forward.
-            Studium studies what the system produces.
+          <p className="welcome-lead">
+            Howling Whispers is an <strong>experimental AI roleplay and worldbuilding project</strong>
+            for creating people, places, lore, and stories that can carry context forward.
           </p>
 
-          <div className="hero-actions">
+          <p className="welcome-subcopy">
+            It is a hobby project under active development. Things may change, break, disappear,
+            or be rebuilt while we explore what a more persistent roleplay world can become.
+          </p>
+
+          <div className="welcome-status" role="note" aria-label="Project status">
+            <FlaskConical size={15} aria-hidden="true" />
+            <span><strong>Heavily experimental.</strong> Come in, explore, and expect a few loose floorboards.</span>
+          </div>
+
+          <div className="hero-actions welcome-actions">
             <a
               href="https://lib.thehowlingwhispers.com/"
               target="_blank"
@@ -42,42 +46,52 @@ export function Hero() {
               <span>Enter Orbis</span>
               <ArrowRight size={16} aria-hidden="true" />
             </a>
-            <a href="#ecosystem" className="button button--secondary">
-              <span>See how it connects</span>
+            <a href="#available" className="button button--secondary">
+              <span>See what is available</span>
             </a>
           </div>
-
-          <p className="hero-start-note">
-            New here? Start with Orbis. It is the shared source of truth the rest of the ecosystem builds from.
-          </p>
         </div>
 
-        <aside className="hero-system-panel" aria-label="Howling Whispers core ecosystem">
-          <div className="hero-system-panel__top">
-            <span>HW / CORE ECOSYSTEM</span>
-            <span className="hero-system-status"><i aria-hidden="true" /> CONNECTED</span>
-          </div>
+        <aside className="welcome-doors" aria-label="Available Howling Whispers experiences">
+          <p className="welcome-doors__eyebrow">OPEN NOW</p>
 
-          <div className="hero-system-list">
-            {systems.map(([number, name, role]) => (
-              <div className="hero-system-row" key={name}>
-                <span className="hero-system-number">{number}</span>
-                <div>
-                  <strong>{name}</strong>
-                  <span>{role}</span>
-                </div>
-                <span className="hero-system-line" aria-hidden="true" />
-              </div>
-            ))}
-          </div>
+          <a
+            className="welcome-door welcome-door--orbis"
+            href="https://lib.thehowlingwhispers.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span className="welcome-door__icon"><BookOpen size={22} /></span>
+            <span className="welcome-door__copy">
+              <strong>Orbis</strong>
+              <small>Build and explore the world library</small>
+            </span>
+            <ArrowRight size={17} aria-hidden="true" />
+          </a>
 
-          <div className="hero-system-footer">
-            <span>CANON</span>
-            <span>SIMULATION</span>
-            <span>STATE</span>
-            <span>RESEARCH</span>
-          </div>
+          <a
+            className="welcome-door welcome-door--speculus"
+            href="https://lib.thehowlingwhispers.com/projects/speculus"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span className="welcome-door__icon"><Terminal size={22} /></span>
+            <span className="welcome-door__copy">
+              <strong>Speculus</strong>
+              <small>Step into roleplay and simulation</small>
+            </span>
+            <ArrowRight size={17} aria-hidden="true" />
+          </a>
+
+          <p className="welcome-doors__note">
+            New here? Start with <strong>Orbis</strong>. It is where worlds, characters, places, and lore live.
+          </p>
         </aside>
+      </div>
+
+      <div className="welcome-scroll-cue" aria-hidden="true">
+        <span>EXPLORE</span>
+        <i />
       </div>
     </section>
   );
