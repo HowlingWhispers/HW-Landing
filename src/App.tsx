@@ -1,5 +1,6 @@
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
+import { LandingTabs } from './components/LandingTabs';
 import { Projects } from './components/Projects';
 import { Community } from './components/Community';
 import { EcosystemFlow } from './components/EcosystemFlow';
@@ -9,10 +10,11 @@ import { Footer } from './components/Footer';
 
 export function App() {
   return (
-    <div className="app">
+    <div className="app" id="top">
       <Header />
       <main>
         <Hero />
+        <LandingTabs />
         <Projects />
         <Community />
         <EcosystemFlow />
