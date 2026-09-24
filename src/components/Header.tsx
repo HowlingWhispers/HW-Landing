@@ -16,11 +16,11 @@ export function Header() {
         </a>
 
         <nav className="nav" aria-label="Main navigation">
-          <a href="#ecosystem">Ecosystem</a>
-          <a href="#projects">Projects</a>
+          <a href="#available">Start here</a>
+          <a href="#community">Community</a>
+          <a href="#ecosystem">The experiment</a>
           <a href="#utilities">Utilities</a>
           <a href="#legacy">Legacy</a>
-          <a href="#community">Community</a>
         </nav>
 
         <div className="header-actions">
