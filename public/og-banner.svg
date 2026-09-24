@@ -1,35 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <defs>
-    <radialGradient id="a" cx="0" cy="0" r="1" gradientTransform="translate(220 115) rotate(34) scale(640 440)" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#294a6c"/>
-      <stop offset="1" stop-color="#080b11"/>
-    </radialGradient>
-    <radialGradient id="b" cx="0" cy="0" r="1" gradientTransform="translate(1020 500) rotate(-144) scale(520 390)" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#4d3b60" stop-opacity=".78"/>
-      <stop offset="1" stop-color="#080b11" stop-opacity="0"/>
-    </radialGradient>
-    <pattern id="g" width="48" height="48" patternUnits="userSpaceOnUse">
-      <path d="M48 0H0v48" fill="none" stroke="#9cb0c8" stroke-opacity=".08"/>
-    </pattern>
-  </defs>
-
-  <rect width="1200" height="630" fill="#080b11"/>
-  <rect width="1200" height="630" fill="url(#a)"/>
-  <rect width="1200" height="630" fill="url(#b)"/>
-  <rect width="1200" height="630" fill="url(#g)"/>
-
-  <path d="m600 82 52 52v68l-52 52-52-52v-68l52-52Z" fill="#0c121c" stroke="#efd69f" stroke-width="4"/>
-  <path d="M600 114v70M552 150h96" stroke="#8db5d8" stroke-width="3" stroke-linecap="round"/>
-
-  <text x="600" y="348" fill="#f4f0e9" text-anchor="middle" font-family="Georgia,serif" font-size="72">Howling Whispers</text>
-  <text x="600" y="407" fill="#efd69f" text-anchor="middle" font-family="Georgia,serif" font-size="31">Build worlds that remember.</text>
-
-  <line x1="250" y1="468" x2="950" y2="468" stroke="#c9a86a" stroke-opacity=".36"/>
-
-  <text x="600" y="515" fill="#a5afbd" text-anchor="middle" font-family="Arial,sans-serif" font-size="19" letter-spacing="2">
-    ORBIS   ·   SPECULUS   ·   FABULA   ·   STUDIUM
-  </text>
-  <text x="600" y="554" fill="#6f7a89" text-anchor="middle" font-family="Arial,sans-serif" font-size="16">
-    Canon · Simulation · Persistent Worlds · Research
-  </text>
+<defs><radialGradient id="sphere" cx="30%" cy="25%"><stop stop-color="#60877c"/><stop offset="1" stop-color="#172925"/></radialGradient></defs>
+<rect width="1200" height="630" fill="#101918"/>
+<g fill="none" stroke="#c7d5ac" stroke-opacity=".35"><circle cx="945" cy="305" r="215"/><circle cx="945" cy="305" r="250" stroke-dasharray="2 12"/><ellipse cx="945" cy="305" rx="255" ry="99" transform="rotate(-35 945 305)"/><circle cx="945" cy="305" r="140" fill="url(#sphere)"/><ellipse cx="945" cy="305" rx="75" ry="140"/><ellipse cx="945" cy="305" rx="140" ry="45"/></g>
+<text x="72" y="92" fill="#c7d5ac" font-family="Arial,sans-serif" font-size="17" letter-spacing="3">HOWLING WHISPERS</text>
+<text x="72" y="248" fill="#e9e9dd" font-family="Georgia,serif" font-size="69">Every whisper</text>
+<text x="72" y="328" fill="#c7d5ac" font-family="Georgia,serif" font-size="69" font-style="italic">becomes a world.</text>
+<text x="74" y="401" fill="#a5b0a8" font-family="Arial,sans-serif" font-size="21">Worlds to build. Stories to step into.</text>
+<path d="M72 491H1128" stroke="#ffffff" stroke-opacity=".15"/>
+<circle cx="79" cy="536" r="4" fill="#c7d5ac"/><text x="96" y="543" fill="#c7d5ac" font-family="Arial,sans-serif" font-size="17">Heavily experimental. Happily in progress.</text>
+<text x="876" y="543" fill="#a5b0a8" font-family="Arial,sans-serif" font-size="14">thehowlingwhispers.com</text>
 </svg>
