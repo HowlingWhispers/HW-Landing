@@ -1128,3 +1128,91 @@ main { overflow: hidden; }
     margin-top: 6px;
   }
 }
+
+
+/* Studium -> Orbis living-canon loop */
+.flow-return {
+  position: relative;
+  margin-top: 30px;
+  padding-top: 24px;
+}
+
+.flow-return__line {
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 18px;
+  border-top: 1px solid rgba(210, 163, 185, .32);
+  border-left: 1px solid rgba(143, 184, 220, .28);
+  border-right: 1px solid rgba(210, 163, 185, .28);
+  border-radius: 18px 18px 0 0;
+}
+
+.flow-return__line::before,
+.flow-return__line::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  width: 7px;
+  height: 7px;
+  border-top: 1px solid currentColor;
+  border-left: 1px solid currentColor;
+}
+
+.flow-return__line::before {
+  left: -4px;
+  color: rgba(143, 184, 220, .7);
+  transform: rotate(-45deg);
+}
+
+.flow-return__line::after {
+  right: -4px;
+  color: rgba(210, 163, 185, .7);
+  transform: rotate(135deg);
+}
+
+.flow-return__content {
+  width: fit-content;
+  max-width: 860px;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 10px 12px;
+  align-items: center;
+  margin: 0 auto;
+  padding: 10px 14px;
+  border: 1px solid rgba(200, 211, 226, .12);
+  border-radius: 999px;
+  background: rgba(8, 12, 18, .72);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.flow-return__content svg {
+  color: var(--gold-bright);
+}
+
+.flow-return__content strong {
+  color: var(--text);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 700px) {
+  .flow-return__line {
+    left: 22px;
+    right: 22px;
+  }
+
+  .flow-return__content {
+    border-radius: 12px;
+    grid-template-columns: auto 1fr;
+  }
+
+  .flow-return__content span {
+    grid-column: 1 / -1;
+  }
+}
