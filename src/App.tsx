@@ -1,9 +1,9 @@
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { Projects } from './components/Projects';
+import { Community } from './components/Community';
 import { EcosystemFlow } from './components/EcosystemFlow';
 import { Utilities } from './components/Utilities';
-import { Community } from './components/Community';
 import { Legacy } from './components/Legacy';
 import { Footer } from './components/Footer';
 
@@ -14,10 +14,10 @@ export function App() {
       <main>
         <Hero />
         <Projects />
+        <Community />
         <EcosystemFlow />
         <Utilities />
         <Legacy />
-        <Community />
       </main>
       <Footer />
     </div>
