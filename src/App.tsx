@@ -30,7 +30,7 @@ const pages: { id: Page; label: string }[] = [
   { id: "archive", label: "Archive" },
 ];
 const ORBIS = "https://lib.thehowlingwhispers.com/";
-const DISCORD = "https://discord.gg/K3aMbSeYw2";
+const DISCORD = "https://discord.gg/Q7RQCmFZ8Y";
 const GITHUB = "https://github.com/HowlingWhispers";
 const readPage = (): Page => {
   const hash = location.hash.slice(1);
