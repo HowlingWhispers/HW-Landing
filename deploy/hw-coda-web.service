@@ -1,0 +1,24 @@
+[Unit]
+Description=Howling Whispers Coda private web rooms
+After=network.target hw-coda-kilo.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/howling-whispers/landing
+EnvironmentFile=/srv/howling-whispers/landing/.env.coda
+ExecStart=/usr/bin/node server/coda.mjs
+Restart=on-failure
+RestartSec=5
+StateDirectory=hw-coda-web
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/hw-coda-web
+
+[Install]
+WantedBy=multi-user.target

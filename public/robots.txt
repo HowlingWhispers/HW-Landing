@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /coda
 
 Sitemap: https://thehowlingwhispers.com/sitemap.xml

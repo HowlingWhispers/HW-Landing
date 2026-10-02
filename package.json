@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "lint": "tsc -b --pretty false"
+    "lint": "tsc -b --pretty false",
+    "coda:start": "node --env-file=.env.coda server/coda.mjs",
+    "test:coda": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

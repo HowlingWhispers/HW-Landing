@@ -9,5 +9,6 @@ export default defineConfig({
   },
   server: {
     port: 5175,
+    proxy: { '/coda/api': 'http://127.0.0.1:3218' },
   },
 });
