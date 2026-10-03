@@ -71,6 +71,23 @@ function contextUrl(config) {
   return `${config.orbisUrl.replace(/\/+$/, '')}/context`;
 }
 
+// The context bridge rejects empty message content, and an image-only room
+// message has none. Describe what actually happened instead, using only the
+// metadata the server genuinely holds. This never claims the pixels were seen.
+function describeForContext(message) {
+  const text = String(message.content || '').trim();
+  if (text) return text.slice(0, 2_000);
+  const images = Array.isArray(message.images) ? message.images : [];
+  if (!images.length) return '[sent a message with no text]';
+  const described = images.slice(0, 4).map(image => {
+    const size = image.width && image.height ? `, ${image.width}x${image.height}` : '';
+    const alt = image.alt ? `, described as "${String(image.alt).slice(0, 120)}"` : '';
+    return `${image.filename || 'image'}${size}${alt}`;
+  });
+  const extra = images.length > described.length ? `, and ${images.length - described.length} more` : '';
+  return `[shared ${images.length === 1 ? 'an image' : `${images.length} images`}: ${described.join('; ')}${extra}]`;
+}
+
 export function browserContextRequest(messages, caller) {
   const current = messages.at(-1);
   const currentIsMember = current?.author !== 'coda';
@@ -89,7 +106,7 @@ export function browserContextRequest(messages, caller) {
     recentMessages: recent.slice(-50).map(message => ({
       ...(message.author === 'coda' ? {} : { authorId: message.author }),
       authorName: message.name,
-      content: message.content.slice(0, 2_000),
+      content: describeForContext(message),
       isCoda: message.author === 'coda',
     })),
   };

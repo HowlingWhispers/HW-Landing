@@ -168,3 +168,25 @@ test('browser context keeps the current speaker separate from room history',()=>
   ],{discordUserId:'12345678901234567',speakerName:'Eirvargr',privacyScope:'dm'});
   assert.equal(request.discordUserId,'12345678901234567');assert.equal(request.text,'What do you remember about AmbiProp?');assert.equal(request.recentMessages[0].authorId,'22345678901234567');
 });
+test('browser context never sends empty message content, which the bridge rejects',()=>{
+  // The context bridge requires non-empty content and answers 400 otherwise,
+  // which surfaced as a 502 on every reply in a room with an image-only message.
+  const messages=[
+    {author:'12345678901234567',name:'Eirvargr',content:'',images:[{id:'i1',filename:'basement.webp',alt:'panel layout',mime:'image/webp',size:2048,width:1024,height:768}]},
+    {author:'coda',name:'Coda',content:'That is a lot of panel.'},
+    {author:'12345678901234567',name:'Eirvargr',content:'Thanks'},
+  ];
+  const request=browserContextRequest(messages,{discordUserId:'12345678901234567',speakerName:'Eirvargr',privacyScope:'dm'});
+  for(const entry of request.recentMessages) assert.ok(entry.content.trim().length>0,`empty content for ${entry.authorName}`);
+  const image=[...request.recentMessages].reverse().find(entry=>entry.authorName==='Eirvargr'&&entry.content.includes('basement.webp'));
+  assert.ok(image,'the image message is described rather than dropped');
+  assert.match(image.content,/shared an image: basement\.webp, 1024x768/);
+  assert.match(image.content,/described as "panel layout"/);
+  // A Coda message with no text is still non-empty, and no image is claimed.
+  const codaTextOnly=browserContextRequest([{author:'coda',name:'Coda',content:''},{author:'1',name:'A',content:'hi'}],{discordUserId:'1',speakerName:'A',privacyScope:'dm'});
+  assert.equal(codaTextOnly.recentMessages[0].content,'[sent a message with no text]');
+  // Several images are bounded and counted honestly.
+  const many=browserContextRequest([{author:'1',name:'A',content:'',images:Array.from({length:6},(_,n)=>({id:`i${n}`,filename:`f${n}.webp`}))},{author:'1',name:'A',content:'hi'}],{discordUserId:'1',speakerName:'A',privacyScope:'dm'});
+  assert.match(many.recentMessages[0].content,/shared 6 images/);
+  assert.match(many.recentMessages[0].content,/and 2 more/);
+});
