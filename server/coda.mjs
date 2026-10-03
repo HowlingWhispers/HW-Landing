@@ -5,12 +5,17 @@ import { fileURLToPath } from 'node:url';
 import { openStore, token, hash } from './store.mjs';
 import { askKilo } from './kilo.mjs';
 import { IMAGE_COUNT_LIMIT, normalizeImage, readImageBody, readStoredImage, removeStoredImage } from './image-files.mjs';
+import { createMusicLayer } from './music/index.mjs';
 
-export function createCodaServer(config, store, generate = askKilo, fetchImpl = fetch) {
+export function createCodaServer(config, store, generate = askKilo, fetchImpl = fetch, musicProviders) {
   const busy = new Set(); const rates = new Map();
+  // The music layer is provider-agnostic; coda.mjs never names a provider.
+  // musicProviders is a test/dev seam: omit it and the registry is derived from config.
+  const music = createMusicLayer({ config, store, fetchImpl, providers: musicProviders });
   const headerText = value => { try { return decodeURIComponent(String(value || '')); } catch { return String(value || ''); } };
   const purgeExpiredImages = () => { const expired=store.all('SELECT id,storage_path FROM images WHERE attached=0 AND created<?',Date.now()-3600_000);expired.forEach(image=>{store.run('DELETE FROM images WHERE id=?',image.id);removeStoredImage(image.storage_path);}); };
   const cookieName = 'hw_coda';
+  const musicCookie = 'hw_coda_music';
   const secure = config.origin.startsWith('https:');
   const cookie = (name, value, seconds) => `${name}=${value}; Path=/coda; HttpOnly; SameSite=Lax; Max-Age=${seconds}${secure ? '; Secure' : ''}`;
   function limit(key, max) {
@@ -64,6 +69,33 @@ export function createCodaServer(config, store, generate = askKilo, fetchImpl = 
       if (!session) fail(401, 'Sign in with Discord to enter your den.');
       limit(session.id + ':requests', 120);
       if (path === '/coda/api/logout' && req.method === 'POST') { store.run('DELETE FROM sessions WHERE token=?', hash(cookies[cookieName])); res.setHeader('Set-Cookie', cookie(cookieName, '', 0)); return send(200, { ok: true }); }
+      if (path === '/coda/api/music' && req.method === 'GET') {
+        const providers = music.providers();
+        return send(200, { providers, connections: providers.map(entry => ({ ...music.descriptor(session.id, entry.id), label: entry.label })) });
+      }
+      const musicRoute = path.match(/^\/coda\/api\/music\/([a-z0-9_-]+)\/(connect|callback|disconnect)$/);
+      if (musicRoute) {
+        const [, providerId, musicAction] = musicRoute;
+        if (!music.provider(providerId)) fail(404, 'That music service is not available.');
+        if (musicAction === 'connect' && req.method === 'GET') {
+          limit(session.id + ':music', 10);
+          const start = await music.startConnect(session.id, providerId);
+          return redirect(start.url, cookie(musicCookie, start.state, 600));
+        }
+        if (musicAction === 'callback' && req.method === 'GET') {
+          const state = url.searchParams.get('state'); const code = url.searchParams.get('code');
+          res.setHeader('Set-Cookie', cookie(musicCookie, '', 0));
+          if (url.searchParams.get('error') || !state || !code) return redirect('/coda#music=failed');
+          try { await music.completeConnect({ state, code, sessionUser: session.id, cookieState: cookies[musicCookie] }); }
+          catch (e) { console.warn('[coda-web] music connect did not complete', { provider: providerId, message: e.message }); return redirect('/coda#music=failed'); }
+          return redirect('/coda#music=connected');
+        }
+        if (musicAction === 'disconnect' && req.method === 'POST') {
+          const result = await music.disconnect(session.id, providerId);
+          return send(200, result);
+        }
+        fail(405, 'That music action is not available.');
+      }
       if (path === '/coda/api/memory' && req.method === 'GET') {
         const response = await fetchImpl(`${config.orbisMemoryUrl}/view?discordUserId=${encodeURIComponent(session.id)}&scope=dm`, { headers:{Authorization:`Bearer ${config.orbisSecret}`},signal:AbortSignal.timeout(15_000) });
         if (response.status===409) return send(200,{linked:false,profile:null,notes:[],audit:[]}); const data=await response.json(); if(!response.ok)fail(502,data.error||'Coda memory is unavailable.'); return send(200,{...data,linked:true});
@@ -82,6 +114,29 @@ export function createCodaServer(config, store, generate = askKilo, fetchImpl = 
       if (path === '/coda/api/join' && req.method === 'POST') {
         limit(session.id + ':join', 10); const data = await body(req);
         try { return send(200, { id: store.redeem(String(data.token || ''), session.id) }); } catch(e) { fail(400,e.message); }
+      }
+      const roomMusic = path.match(/^\/coda\/api\/rooms\/([a-f0-9-]+)\/music(?:\/(join|leave|devices))?$/);
+      if (roomMusic) {
+        const [, roomId, musicAction] = roomMusic;
+        if (!store.member(roomId, session.id)) fail(404, 'That room could not be found.');
+        const known = music.providerIds();
+        const providerId = url.searchParams.get('provider') || known[0];
+        if (!providerId || !known.includes(providerId)) fail(409, 'No music service is configured on this server yet.');
+        if (!musicAction && req.method === 'GET') {
+          const roster = music.roster(roomId, providerId);
+          return send(200, { provider: providerId, roster, listeners: music.connectedUsers(roomId, providerId).length, you: music.descriptor(session.id, providerId), optedIn: roster.some(entry => entry.user === session.id) });
+        }
+        if (musicAction === 'join' && req.method === 'POST') {
+          limit(session.id + ':music', 20); const data = await body(req);
+          const deviceId = data.deviceId ? String(data.deviceId).slice(0, 120) : null;
+          return send(200, music.optIn(roomId, session.id, providerId, deviceId));
+        }
+        if (musicAction === 'leave' && req.method === 'POST') return send(200, music.optOut(roomId, session.id, providerId));
+        if (musicAction === 'devices' && req.method === 'GET') {
+          const { devices, selection } = await music.devices(roomId, session.id, providerId);
+          return send(200, { devices, selection });
+        }
+        fail(405, 'That music action is not available.');
       }
       const imageMatch=path.match(/^\/coda\/api\/rooms\/([a-f0-9-]+)\/images(?:\/([a-f0-9-]+))?$/);
       if(imageMatch){const [,roomId,imageId]=imageMatch;if(!store.member(roomId,session.id))fail(404,'That image could not be found.');
@@ -124,7 +179,7 @@ export function createCodaServer(config, store, generate = askKilo, fetchImpl = 
       if (action === 'messages' && req.method === 'POST') {
         limit(session.id + ':messages', 20); const data = await body(req); const text = typeof data.text === 'string' ? data.text.trim() : ''; const imageIds=Array.isArray(data.imageIds)?data.imageIds.map(String):[];
         if ((!text&&!imageIds.length) || text.length > 8000 || imageIds.length>IMAGE_COUNT_LIMIT) fail(400,'Write a message of up to 8,000 characters and attach up to four images.');
-        if (/^\/(?:help|memory|format|clear)(?:\s|$)/i.test(text)) fail(400,'Browser Coda commands are private controls and cannot be stored as room messages.');
+        if (/^\/(?:help|memory|format|clear|music)(?:\s|$)/i.test(text)) fail(400,'Browser Coda commands are private controls and cannot be stored as room messages.');
         store.addMessage(id,session.id,session.name,text,imageIds); return send(201,{ok:true});
       }
       if (action === 'reply' && req.method === 'POST') {
@@ -134,11 +189,16 @@ export function createCodaServer(config, store, generate = askKilo, fetchImpl = 
         busy.add(id);
         try {
           const memberCount = store.get('SELECT COUNT(*) AS n FROM members WHERE room=?',id).n;
-          const reply = await generate(config,id,history,{ discordUserId: session.id, speakerName: session.name, privacyScope: memberCount === 1 ? 'dm' : 'guild' });
+          const musicState = music.promptState(id, session.id);
+          const result = await generate(config,id,history,{ discordUserId: session.id, speakerName: session.name, privacyScope: memberCount === 1 ? 'dm' : 'guild' },fetchImpl,{ prompt: musicState, providerIds: music.providerIds() });
+          const reply = typeof result === 'string' ? result : result.text;
+          const musicIntent = typeof result === 'string' ? null : result.musicIntent || null;
           // A participant removed during generation must not receive room content.
           store.addMessage(id,'coda','Coda',reply);
           if (!store.member(id,session.id)) fail(404,'That room could not be found.');
-          return send(200,{ok:true});
+          // Step 4 consumes this intent. Nothing is dispatched to a provider yet,
+          // and it is never written into the transcript.
+          return send(200,{ok:true,music:musicIntent});
         } finally { busy.delete(id); }
       }
       fail(405,'That action is not available.');
@@ -152,7 +212,13 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   if (new URL(origin).origin !== origin) throw new Error('CODA_WEB_ORIGIN must be an origin without a trailing slash');
   const path = env.CODA_WEB_DB || '/var/lib/hw-coda-web/rooms.sqlite'; mkdirSync(dirname(path),{recursive:true,mode:0o700});
   const store = openStore(path);
-  const config = { origin, clientId: env.DISCORD_BOT_CLIENT_ID || env.DISCORD_CLIENT_ID, clientSecret: env.DISCORD_CLIENT_SECRET, kiloUrl: env.CODA_KILO_BASE_URL || 'http://127.0.0.1:4096', kiloUsername: env.KILO_SERVER_USERNAME || 'kilo', kiloPassword: env.KILO_SERVER_PASSWORD, kiloModel: env.CODA_KILO_MODEL || 'kilo/kilo-auto/free', kiloVisionModel: env.CODA_KILO_VISION_MODEL || env.CODA_KILO_MODEL || 'kilo/kilo-auto/free', orbisUrl: env.CODA_ORBIS_BRIDGE_URL || 'http://127.0.0.1:8789/api/internal/coda-discord', orbisMemoryUrl: env.CODA_ORBIS_MEMORY_URL || 'http://127.0.0.1:8789/api/internal/coda-memory', orbisSecret: env.CODA_ORBIS_BRIDGE_SECRET, imageRoot: env.CODA_WEB_IMAGE_DIR || '/var/lib/hw-coda-web/images' };
+  const config = { origin, clientId: env.DISCORD_BOT_CLIENT_ID || env.DISCORD_CLIENT_ID, clientSecret: env.DISCORD_CLIENT_SECRET, kiloUrl: env.CODA_KILO_BASE_URL || 'http://127.0.0.1:4096', kiloUsername: env.KILO_SERVER_USERNAME || 'kilo', kiloPassword: env.KILO_SERVER_PASSWORD, kiloModel: env.CODA_KILO_MODEL || 'kilo/kilo-auto/free', kiloVisionModel: env.CODA_KILO_VISION_MODEL || env.CODA_KILO_MODEL || 'kilo/kilo-auto/free', orbisUrl: env.CODA_ORBIS_BRIDGE_URL || 'http://127.0.0.1:8789/api/internal/coda-discord', orbisMemoryUrl: env.CODA_ORBIS_MEMORY_URL || 'http://127.0.0.1:8789/api/internal/coda-memory', orbisSecret: env.CODA_ORBIS_BRIDGE_SECRET, imageRoot: env.CODA_WEB_IMAGE_DIR || '/var/lib/hw-coda-web/images',
+    // Music: provider credentials are optional and provider-specific. The whole
+    // environment is handed to the music layer, which resolves only the keys its
+    // own adapters declare, so no provider name appears in this file. Without
+    // credentials the registry exposes nothing and Coda tells members plainly
+    // that no music account is connected.
+    tokenKey: env.CODA_TOKEN_KEY, musicProvider: env.CODA_MUSIC_PROVIDER || '', env };
   const server = createCodaServer(config,store);
   server.listen(Number(env.CODA_WEB_PORT || 3218),'127.0.0.1',()=>console.log('Coda Web listening on loopback'));
   for (const signal of ['SIGINT','SIGTERM']) process.on(signal,()=>server.close(()=>{store.db.close();process.exit(0);}));

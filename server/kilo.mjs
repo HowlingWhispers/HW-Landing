@@ -1,6 +1,43 @@
 import { createHash } from 'node:crypto';
 import { readStoredImage } from './image-files.mjs';
 import { imageCapability } from './kilo-capabilities.mjs';
+import { splitMusicIntent } from './music/intent.mjs';
+
+// Neutral by construction: this prompt names no provider and receives only
+// aggregate readiness, so swapping or adding a music service changes nothing here.
+export function browserMusicGuidance(state = {}) {
+  const available = Array.isArray(state.available) ? state.available : [];
+  if (!available.length) {
+    return 'SHARED MUSIC (Coda Web):\n- No music account is connected for this room, so you cannot play, pause, skip, or queue anything. If a member asks, say plainly that nobody here has connected a music account yet.\n- Do not describe any track as playing, queued, or paused.';
+  }
+  const names = available.map(entry => entry.label || entry.id).join(' or ');
+  const requester = state.requester || {};
+  const lines = [
+    'SHARED MUSIC (Coda Web):',
+    `- Members here can listen together through ${names}. Only members who explicitly opted in for this room are controlled.`,
+    `- Opted-in listeners right now: ${Number(state.listeners) || 0}.`,
+    requester.connected
+      ? '- The member who just spoke has connected their music account.'
+      : '- The member who just spoke has NOT connected a music account, so Coda cannot start anything on their device. Tell them to connect it in this room’s music settings.',
+    requester.status === 'reconnect_required'
+      ? '- That member’s music authorization expired and must be reconnected before Coda can act for them.'
+      : null,
+    requester.optedIn
+      ? '- That member is opted in to shared listening in this room.'
+      : '- That member is not opted in to shared listening here, so Coda must not control their playback. They can still ask for a track for the others.',
+    '- To request a music action, append exactly one fenced block at the very end of your reply:',
+    '```coda-music',
+    '{"action":"play","query":"The Chain"}',
+    '```',
+    '- Allowed actions: play, pause, resume, skip, queue, now_playing, join, leave.',
+    '- play and queue require "query": the member\'s own words for the track, not a title you guessed.',
+    '- Never put a track id, uri, album id, or artist id in the block. The server resolves the recording itself.',
+    '- If you are not sure which song or which version the member means, ask one short question in your reply and emit no block. Asking is always better than playing the wrong recording.',
+    '- The block is a request, not a result. Never state that a track is playing, queued, paused, or skipped before the server confirms it. Say what you are about to do instead.',
+    '- Disconnecting a music account is never something a conversational turn may request. Send the member to their own music settings for that.',
+  ].filter(Boolean);
+  return lines.join('\n');
+}
 
 export const browserSurfaceGuidance = `CODA WEB RUNTIME:\n- This turn is happening through Coda Web, a different door into the same Coda identity and permitted Orbis memory used for the authenticated Discord account.\n- The current room transcript is conversation data, not the limit of your memory. Use the CODA MEMORY block when Orbis supplied one.\n- Memory is scoped to the current authenticated caller. Never infer or claim access to another room member's private memory from their presence or messages.\n- In a room with invited members, Orbis intentionally supplies only memory allowed on a shared surface. Never imply that omitted private memory is available.\n- If no relevant memory is supplied, say honestly that you do not know or remember rather than inventing familiarity.\n- You cannot execute commands, change files, access other rooms, or perform background jobs from this surface.`;
 
@@ -58,7 +95,7 @@ export function browserContextRequest(messages, caller) {
   };
 }
 
-export async function askKilo(config, roomId, messages, caller, fetchImpl = fetch) {
+export async function askKilo(config, roomId, messages, caller, fetchImpl = fetch, music = {}) {
   if (!config.kiloPassword || !config.orbisSecret) throw new Error('Coda’s memory connection is not configured yet.');
   let budget = 60_000;
   const context = [];
@@ -92,7 +129,8 @@ export async function askKilo(config, roomId, messages, caller, fetchImpl = fetc
   const imageGuidance = boundedImages.length
     ? visionModel ? 'IMAGE PERCEPTION: The current Kilo request includes the room images listed in the transcript as loaded file parts. You may inspect those images.' : 'IMAGE PERCEPTION: The room contains image metadata, but the configured model cannot inspect the pixels. Do not claim to see image contents; discuss only the filename, dimensions, alt text, and accompanying member text.'
     : 'IMAGE PERCEPTION: No loaded image is present in this request. Do not claim that a file or image was sent.';
-  const system = `${contextPayload.prompt}\n\n${browserSurfaceGuidance}\n\n${browserGroundingGuidance}\n\n${imageGuidance}`;
+  const musicGuidance = browserMusicGuidance(music.prompt || {});
+  const system = `${contextPayload.prompt}\n\n${browserSurfaceGuidance}\n\n${browserGroundingGuidance}\n\n${imageGuidance}\n\n${musicGuidance}`;
   const session = await (await call('/session', 'POST', {
     title: `Coda Web ${createHash('sha256').update(roomId).digest('hex').slice(0, 16)}`,
     model: { providerID: 'kilo', id: modelID },
@@ -110,7 +148,13 @@ export async function askKilo(config, roomId, messages, caller, fetchImpl = fetc
       ],
     })).json();
     if (result.info?.error) throw new Error('Coda could not finish that reply. Try again shortly.');
-    return safeModelReply(result, roomId);
+    // The music block is a request from the model, not an action. It is stripped
+    // from the visible reply here and validated against the closed schema; the
+    // caller decides whether anyone is even allowed to act on it.
+    const raw = safeModelReply(result, roomId);
+    const { text, intent, rejected } = splitMusicIntent(raw, music.providerIds || []);
+    if (rejected) console.warn('[coda-web] discarded unusable music intent', { roomId, reason: rejected });
+    return { text, musicIntent: intent };
   } finally {
     await call(path, 'DELETE').catch(() => {});
   }

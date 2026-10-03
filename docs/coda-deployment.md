@@ -46,6 +46,49 @@ file part. Production therefore stays on the normal text route and treats image
 content as metadata-only until the upstream vision route is manually repaired.
 Do not claim pixel inspection while that limitation is active.
 
+## Shared music (phases 1-3 landed; playback not yet enabled)
+
+Browser Coda can listen together through a music provider. The intent path is
+complete, but no provider is ever asked to play anything yet: a recognized
+intent is returned to the reply route and then dropped. Members are not yet
+able to start music, and the client has no music controls.
+
+Landed in this phase:
+
+- A provider-agnostic music layer under `server/music/`. Only `spotify.mjs`
+  knows what Spotify is. Adding another service means adding one adapter.
+- Provider tokens are sealed with AES-256-GCM under `CODA_TOKEN_KEY` and stored
+  server-side only. A database copy alone cannot play anything in an account.
+- OAuth connect, callback, and disconnect. The state is single use, expires in
+  ten minutes, and is bound to the authenticated account that started it.
+- Disconnect is local only. It destroys the sealed tokens and every opt-in that
+  member held, which stops Coda controlling that account immediately. It does
+  not revoke the grant on Spotify's side; members who want that remove Coda from
+  Spotify's own connected-apps page, and the response says so.
+- Access tokens refresh on demand under a single-flight lock, and rotated
+  refresh tokens are persisted. A rejected refresh is terminal: the sealed
+  material is deleted, the connection is marked reconnect-required, no retry loop
+  runs, and Coda asks the member to reconnect. `authorized_at` is stored so the
+  roughly six-month refresh lifetime is visible.
+- Per-room opt-in. A member must connect an account and then explicitly join
+  shared listening for that room. The roster is read on every request, so
+  leaving or disconnecting revokes control with no stale window.
+- Device discovery with provider-neutral selection policy. No usable device is
+  a normal state with a written explanation, not an error.
+- Track resolution keeps the same recording: candidates are grouped by ISRC, so
+  a live take or remix is a distinct recording. Two close recordings is
+  reported as ambiguous for Coda to ask about, never silently substituted.
+- A strict music intent schema parsed out of Coda's reply. The model may only
+  request an action using the member's own words; it never names a track id, and
+  the server resolves the recording itself. Disconnect is not a requestable
+  action. Malformed blocks are always stripped so internal markup cannot reach a
+  member.
+
+To enable real playback, still required: step 4 dispatch, the client music
+controls, and a Spotify developer app whose client id, client secret, and
+registered redirect URI match `SPOTIFY_REDIRECT_URI` exactly. Playback
+requires a Spotify Premium account.
+
 ## Production deployment (existing Vienna host)
 
 1. Pull `HowlingWhispers/HW-Landing` **main** in

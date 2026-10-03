@@ -146,7 +146,7 @@ test('Kilo uses all-tool denial and destroys the session after completion and er
     const config={kiloUrl:'http://localhost:4096',kiloUsername:'kilo',kiloPassword:'secret',kiloModel:'kilo/kilo-auto/free',orbisUrl:'http://localhost:8789/api/internal/coda-discord',orbisSecret:'bridge-secret'};
     const caller={discordUserId:'12345678901234567',speakerName:'Eirvargr',privacyScope:'dm'};
     const messages=[{author:'12345678901234567',name:'Eirvargr',content:'What do you remember about AmbiProp?'}];
-    if(failure)await assert.rejects(askKilo(config,'room',messages,caller,fetcher));else assert.equal(await askKilo(config,'room',messages,caller,fetcher),'Woof.');
+    if(failure)await assert.rejects(askKilo(config,'room',messages,caller,fetcher));else assert.equal((await askKilo(config,'room',messages,caller,fetcher)).text,'Woof.');
     const contextCall=calls.find(call=>call.url.endsWith('/context'));const contextBody=JSON.parse(contextCall.init.body);assert.equal(contextBody.discordUserId,caller.discordUserId);assert.equal(contextBody.privacyScope,'dm');assert.equal(contextBody.surface,'web');
     const create=JSON.parse(calls.find(call=>call.url.endsWith('/session')).init.body);assert.equal(create.permission[0].action,'deny');
     const message=JSON.parse(calls.find(call=>call.url.endsWith('/message')).init.body);assert.ok(Object.values(message.tools).every(value=>value===false));assert.match(message.system,/AmbiProp is a known friend/);assert.match(message.system,/same Coda identity/);assert.equal(calls.at(-1).init.method,'DELETE');
@@ -157,7 +157,7 @@ test('vision-capable Kilo receives room image bytes as dedicated file parts',asy
   const calls=[];const fetcher=async(url,init={})=>{calls.push({url:String(url),init});if(String(url).endsWith('/context'))return Response.json({prompt:'CODA WEB MODE'});if(String(url).endsWith('/provider'))return Response.json({all:[{models:{vision:{id:'kilo-auto/vision',capabilities:{input:{image:true}}}}}]});if(String(url).endsWith('/session'))return Response.json({id:'vision-session'});if(init.method==='DELETE')return new Response(null,{status:204});return Response.json({parts:[{type:'text',text:'I can see it.'}]});};
   const config={kiloUrl:'http://vision:4096',kiloUsername:'kilo',kiloPassword:'secret',kiloModel:'kilo/kilo-auto/free',kiloVisionModel:'kilo/kilo-auto/vision',orbisUrl:'http://orbis/coda-discord',orbisSecret:'bridge'};
   const message={author:'12345678901234567',name:'Member',content:'Inspect this',images:[{id:'image',filename:'map.webp',alt:'Map',mime:'image/webp',size:16,width:10,height:10,url:'/image',storagePath:path}]};
-  assert.equal(await askKilo(config,'room',[message],{discordUserId:message.author,speakerName:'Member',privacyScope:'dm'},fetcher),'I can see it.');
+  assert.equal((await askKilo(config,'room',[message],{discordUserId:message.author,speakerName:'Member',privacyScope:'dm'},fetcher)).text,'I can see it.');
   const session=JSON.parse(calls.find(call=>call.url.endsWith('/session')).init.body);const completion=JSON.parse(calls.find(call=>call.url.endsWith('/message')).init.body);
   assert.equal(session.model.id,'kilo-auto/vision');assert.equal(completion.model.modelID,'kilo-auto/vision');assert.equal(completion.parts[0].type,'text');assert.equal(completion.parts[1].type,'file');assert.match(completion.parts[1].url,/^data:image\/webp;base64,/);assert.doesNotMatch(completion.parts[0].text,/safe-image-bytes/);
 });
