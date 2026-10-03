@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import documents from "./public-documents.json";
 import {
   BookOpen,
   Compass,
@@ -12,15 +15,27 @@ import {
   Sun,
   Terminal,
   Wrench,
-  Orbit,
+  Music,
+  FileText,
+  ArrowUpRight,
+  PawPrint,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-type Page = "welcome" | "projects" | "experiment" | "community" | "archive";
+type Page =
+  | "welcome"
+  | "projects"
+  | "documentation"
+  | "creations"
+  | "experiment"
+  | "community"
+  | "archive";
 const pages: { id: Page; label: string }[] = [
   { id: "welcome", label: "Home" },
-  { id: "projects", label: "Explore" },
-  { id: "experiment", label: "The ecosystem" },
+  { id: "projects", label: "Projects" },
+  { id: "documentation", label: "Docs" },
+  { id: "creations", label: "Creations" },
+  { id: "experiment", label: "Experiments" },
   { id: "community", label: "Community" },
   { id: "archive", label: "Archive" },
 ];
@@ -28,7 +43,7 @@ const ORBIS = "https://lib.thehowlingwhispers.com/";
 const DISCORD = "https://discord.gg/Q7RQCmFZ8Y";
 const GITHUB = "https://github.com/HowlingWhispers";
 function readPage(): Page {
-  const h = location.hash.slice(1);
+  const h = location.hash.slice(1).split("/")[0];
   const aliases: Record<string, Page> = {
     top: "welcome",
     available: "projects",
@@ -47,7 +62,7 @@ type Project = {
   color: string;
   href?: string;
   action?: string;
-  repo: string;
+  repo?: string;
 };
 const projects: Project[] = [
   {
@@ -106,15 +121,55 @@ const projects: Project[] = [
     color: "cyan",
     repo: "HW-Studium",
   },
+
   {
-    name: "EVE Copilot",
-    tag: "Utility",
+    name: "Coda",
+    tag: "Community companion",
+    status: "Discord bot",
+    description:
+      "The clipboard-carrying canine in our community: conversations, worldbuilding help and creative experiments.",
+    icon: PawPrint,
+    color: "cyan",
+    href: DISCORD,
+    action: "Meet Coda on Discord",
+  },
+  {
+    name: "Chatty",
+    tag: "Private roleplay",
     status: "Private project",
     description:
-      "An independent experiment in EVE account tools, market analysis, cargo planning and corporation comms.",
-    icon: Orbit,
+      "Character-driven conversations and local stories. The original roleplay line continues as its own project.",
+    icon: MessageCircle,
     color: "violet",
-    repo: "HW-EVE-Copilot",
+  },
+  {
+    name: "Mouseion",
+    tag: "Creation",
+    status: "Planned",
+    description:
+      "A proposed creation layer for new world assets. Its place in the ecosystem is still being designed.",
+    icon: Sparkles,
+    color: "cyan",
+  },
+  {
+    name: "Mens",
+    tag: "Research direction",
+    status: "Reserved / private",
+    description:
+      "A reserved project within Howling Whispers. Public features and documentation have not been announced.",
+    icon: FlaskConical,
+    color: "violet",
+  },
+
+  {
+    name: "HW Landing",
+    tag: "Discovery",
+    status: "Project hub",
+    description:
+      "You are here. Discover the software, documentation, prototypes and creative work across Howling Whispers.",
+    icon: Compass,
+    color: "cyan",
+    repo: "HW-Landing",
   },
 ];
 function Link({
@@ -159,10 +214,12 @@ function Card({ p }: { p: Project }) {
             <Wrench size={15} /> On the workbench
           </span>
         )}
-        <Link href={`${GITHUB}/${p.repo}`} className="source-link">
-          <Github size={18} />
-          <span className="sr-only">{p.name} source repository</span>
-        </Link>
+        {p.repo && (
+          <Link href={`${GITHUB}/${p.repo}`} className="source-link">
+            <Github size={18} />
+            <span className="sr-only">{p.name} source repository</span>
+          </Link>
+        )}
       </div>
     </article>
   );
@@ -228,139 +285,366 @@ function Catalog() {
     </>
   );
 }
+const destinations = [
+  {
+    title: "Find your next project",
+    label: "SOFTWARE & SYSTEMS",
+    text: "Worldbuilding, roleplay, research, game tools and the smaller experiments between them.",
+    href: "#projects",
+    icon: Compass,
+  },
+  {
+    title: "Open the notebooks",
+    label: "DOCUMENTATION",
+    text: "Read the actual guides, architecture notes and development plans behind the projects.",
+    href: "#documentation",
+    icon: FileText,
+  },
+  {
+    title: "See what we make",
+    label: "MUSIC & STORIES",
+    text: "A place for our music, worlds, artwork and narrative experiments.",
+    href: "#creations",
+    icon: Music,
+  },
+];
 function Home() {
-  const [goal, setGoal] = useState(0);
-  const goals = [
-    {
-      label: "Build a world",
-      title: "Start with a place. Give it a story.",
-      text: "Open Orbis to create or explore worlds and the people, places and lore within them.",
-      action: "Enter the library",
-      href: ORBIS,
-    },
-    {
-      label: "Start a story",
-      title: "Your persona. A world of possibilities.",
-      text: "Choose an asset in Orbis and use Simulate to launch Speculus. Bring your own persona into the scene.",
-      action: "Choose a starting point",
-      href: ORBIS,
-    },
-    {
-      label: "Join the makers",
-      title: "Bring an idea. Find good company.",
-      text: "Meet the community on Discord to talk worldbuilding, share experiments and help test what comes next.",
-      action: "Join the Discord",
-      href: DISCORD,
-    },
-  ];
   return (
     <>
-      <section className="hero shell">
+      <section className="hero shell coda-hero">
         <div className="hero-copy">
-          <p className="eyebrow">INDEPENDENT WORLDS / OPEN-ENDED STORIES</p>
+          <p className="eyebrow">WELCOME TO HOWLING WHISPERS</p>
           <h1>
-            Every whisper
+            A little curiosity.
             <br />
-            becomes <em>a world.</em>
+            <em>A whole lot of possibility.</em>
           </h1>
           <p className="hero-description">
-            A home for worldbuilders, storytellers
-            <br className="desktop-break" /> and wonderfully strange
-            experiments.
+            Software, stories, music, worlds.
+            <br />
+            Come find the strange thing we’re building next.
           </p>
           <div className="actions">
-            <Link href={ORBIS} className="button primary">
-              Explore Orbis
-            </Link>
-            <a href="#projects" className="button secondary">
-              Find a project
+            <a href="#projects" className="button primary">
+              Explore the projects <ArrowUpRight size={18} />
+            </a>
+            <a href="#documentation" className="button secondary">
+              Read the notebooks
             </a>
           </div>
-          <p className="hero-note">
-            <FlaskConical size={16} /> Built with curiosity. Still experimental.
+          <p className="coda-note">
+            <PawPrint size={19} /> “Bring your ideas. I brought the clipboard.”{" "}
+            <span>— Coda</span>
           </p>
         </div>
-        <div className="hero-index">
-          <div className="index-header">
-            <span className="eyebrow">THE HOWLING WHISPERS FIELD NOTES</span>
-            <Sparkles size={21} />
-          </div>
-          <div className="index-number" aria-hidden="true">
-            HW<span> / 01</span>
-          </div>
-          <p className="index-title">
-            A world is more
-            <br />
-            than its <em>first story.</em>
-          </p>
-          <p>
-            Build its foundations. Meet its characters.
-            <br />
-            Discover what happens next.
-          </p>
-          <div className="index-bottom">
-            <span>WORLD / CHARACTER / STORY</span>
-            <a href="#experiment">Explore the connections</a>
-          </div>
-        </div>
+        <figure className="coda-art">
+          <img
+            src="/art/coda-workshop.webp"
+            alt="Coda, a white and pale blue canine beastfolk, welcomes you to a creative workshop with her clipboard."
+            width="1536"
+            height="1024"
+            fetchPriority="high"
+          />
+          <figcaption>
+            <span>YOUR HOST</span> Coda <PawPrint size={16} />
+          </figcaption>
+        </figure>
       </section>
-      <section className="start-section shell">
+      <div className="discovery-strip shell">
+        <span>
+          <strong>{projects.length}</strong> project directions
+        </span>
+        <span>
+          <strong>{documents.length}</strong> public documents
+        </span>
+        <span>
+          <strong>One</strong> curious community
+        </span>
+      </div>
+      <section className="section shell">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">YOUR FIRST CHAPTER</p>
-            <h2>What brings you here?</h2>
+            <p className="eyebrow">PICK A THREAD</p>
+            <h2>Where shall we wander?</h2>
           </div>
-          <span className="section-number">01 / BEGIN</span>
+          <span className="section-number">CODA’S DIRECTORY / 01</span>
         </div>
-        <div className="start-panel">
-          <div className="goal-tabs" aria-label="Choose a starting point">
-            {goals.map((g, i) => (
-              <button
-                key={g.label}
-                aria-pressed={goal === i}
-                onClick={() => setGoal(i)}
-              >
-                <span>0{i + 1}</span>
-                {g.label}
-              </button>
-            ))}
-          </div>
-          <div className="goal-detail" aria-live="polite">
-            <h3>{goals[goal].title}</h3>
-            <p>{goals[goal].text}</p>
-            <Link href={goals[goal].href} className="text-link">
-              {goals[goal].action}
-            </Link>
-          </div>
+        <div className="destination-grid">
+          {destinations.map((d) => (
+            <a className="destination" href={d.href} key={d.title}>
+              <d.icon size={29} />
+              <span className="eyebrow">{d.label}</span>
+              <h3>{d.title}</h3>
+              <p>{d.text}</p>
+              <span className="text-link">
+                Take a look <ArrowUpRight size={17} />
+              </span>
+            </a>
+          ))}
         </div>
       </section>
       <section className="section shell">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">EXPLORE THE WORKBENCH</p>
-            <h2>
-              Small beginnings.
-              <br />
-              <em>Growing possibilities.</em>
-            </h2>
+            <p className="eyebrow">ON THE WORKBENCH</p>
+            <h2>Different projects. Shared curiosity.</h2>
           </div>
-          <span className="section-number">02 / DISCOVER</span>
+          <a className="text-link" href="#projects">
+            All projects <ArrowUpRight size={17} />
+          </a>
         </div>
-        <Catalog />
+        <div className="project-grid">
+          {[projects[3], projects[4], projects[5]].map((p) => (
+            <Card key={p.name} p={p} />
+          ))}
+        </div>
+      </section>
+      <section className="section shell notebook-section">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">OPEN NOTEBOOKS</p>
+            <h2>Go beyond the introduction.</h2>
+          </div>
+          <a href="#documentation" className="text-link">
+            Browse documentation <ArrowUpRight size={17} />
+          </a>
+        </div>
+        <div className="notebook-grid">
+          {documents
+            .filter((d) => d.category === "Architecture")
+            .slice(0, 3)
+            .map((d) => (
+              <a
+                className="notebook"
+                key={d.id}
+                href={`#documentation/${d.id}`}
+              >
+                <FileText size={25} />
+                <span className="eyebrow">
+                  {d.project} / {d.category}
+                </span>
+                <h3>{d.title}</h3>
+                <span className="text-link">
+                  Read the document <ArrowUpRight size={17} />
+                </span>
+              </a>
+            ))}
+        </div>
       </section>
       <section className="community-banner shell">
         <div>
-          <p className="eyebrow">GOOD IDEAS NEED COMPANY</p>
-          <h2>Pull up a chair.</h2>
+          <p className="eyebrow">THE DEN IS OPEN</p>
+          <h2>Good ideas need company.</h2>
           <p>
-            Share a world, test an experiment, or help us chase a loose thread.
+            Developers, storytellers, artists and curious passersby. Pull up a
+            chair.
           </p>
         </div>
         <Link href={DISCORD} className="button primary">
-          Join the community
+          Join the community <PawPrint size={18} />
         </Link>
       </section>
     </>
+  );
+}
+function Documentation() {
+  const [query, setQuery] = useState("");
+  const [project, setProject] = useState("All projects");
+  const [active, setActive] = useState(() => location.hash.split("/")[1] || "");
+  useEffect(() => {
+    const change = () => setActive(location.hash.split("/")[1] || "");
+    window.addEventListener("hashchange", change);
+    return () => window.removeEventListener("hashchange", change);
+  }, []);
+  const visible = documents.filter(
+    (d) =>
+      (project === "All projects" || d.project === project) &&
+      `${d.title} ${d.project} ${d.category} ${d.body}`
+        .toLowerCase()
+        .includes(query.toLowerCase()),
+  );
+  const selected = documents.find((d) => d.id === active);
+  function docUrl(href: string) {
+    if (!selected) return "";
+    if (/^https?:/i.test(href)) return href;
+    if (href.startsWith("#")) return "";
+    if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("//")) return "";
+    return new URL(href, selected.source).href;
+  }
+  return (
+    <section className="section shell page-section">
+      <p className="eyebrow">THE HOWLING WHISPERS NOTEBOOKS</p>
+      <h1>
+        Ideas, explained.
+        <br />
+        <em>Work, documented.</em>
+      </h1>
+      <p className="page-intro">
+        Public guides and design documents from across the projects. Read them
+        here, or follow the source to GitHub.
+      </p>
+      {selected ? (
+        <article className="document-reader">
+          <a href="#documentation" className="text-link">
+            ← All documents
+          </a>
+          <div className="reader-header">
+            <div>
+              <span className="eyebrow">
+                {selected.project} / {selected.category}
+              </span>
+              <h2>{selected.title}</h2>
+            </div>
+            <Link className="button secondary" href={selected.source}>
+              View source <ArrowUpRight size={17} />
+            </Link>
+          </div>
+          <p className="document-meta">
+            Snapshot captured {selected.captured} · Source revision{" "}
+            {selected.sha.slice(0, 7)} · May differ from current code.
+          </p>
+          <div className="markdown">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              skipHtml
+              urlTransform={docUrl}
+              components={{
+                a: ({ href, children }) =>
+                  href ? (
+                    <Link href={href}>{children}</Link>
+                  ) : (
+                    <span>{children}</span>
+                  ),
+                img: ({ alt }) => <span>{alt}</span>,
+              }}
+            >
+              {selected.body}
+            </ReactMarkdown>
+          </div>
+        </article>
+      ) : (
+        <>
+          <div className="catalog-tools">
+            <label className="doc-project">
+              <span className="sr-only">Filter documentation by project</span>
+              <select
+                value={project}
+                onChange={(e) => setProject(e.target.value)}
+              >
+                {[
+                  "All projects",
+                  ...new Set(documents.map((d) => d.project)),
+                ].map((p) => (
+                  <option key={p}>{p}</option>
+                ))}
+              </select>
+            </label>
+            <label className="project-search">
+              <Search size={18} />
+              <span className="sr-only">Search documentation</span>
+              <input
+                type="search"
+                placeholder="Search the notebooks…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </label>
+          </div>
+          <p className="result-count" aria-live="polite">
+            {visible.length} documents
+          </p>
+          <div className="notebook-grid">
+            {visible.map((d) => (
+              <a
+                className="notebook"
+                key={d.id}
+                href={`#documentation/${d.id}`}
+              >
+                <FileText size={25} />
+                <span className="eyebrow">
+                  {d.project} / {d.category}
+                </span>
+                <h3>{d.title}</h3>
+                <p>{d.path}</p>
+                <span className="text-link">
+                  Read document <ArrowUpRight size={17} />
+                </span>
+              </a>
+            ))}
+          </div>
+          {!visible.length && (
+            <div className="empty">
+              <h3>No documents found.</h3>
+              <button
+                className="button secondary"
+                onClick={() => {
+                  setQuery("");
+                  setProject("All projects");
+                }}
+              >
+                Reset filters
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+function Creations() {
+  return (
+    <section className="section shell page-section">
+      <p className="eyebrow">BEYOND THE CODE</p>
+      <h1>
+        Made with imagination.
+        <br />
+        <em>Shared with you.</em>
+      </h1>
+      <p className="page-intro">
+        Music, worldbuilding and experimental storytelling are part of Howling
+        Whispers too.
+      </p>
+      <div className="creation-grid">
+        <article className="creation-feature">
+          <Music size={35} />
+          <span className="eyebrow">THE HOWLING WHISPERS SOUNDTRACK</span>
+          <h2>Listen to our other side.</h2>
+          <p>
+            Visit the official channel for music, artwork and the worlds behind
+            them.
+          </p>
+          <Link
+            href="https://www.youtube.com/@HowlingWhispersOfficial"
+            className="button primary"
+          >
+            Open the music channel <ArrowUpRight size={18} />
+          </Link>
+        </article>
+        <article className="creation-feature blue">
+          <Compass size={35} />
+          <span className="eyebrow">STORIES & EXPERIMENTS</span>
+          <h2>Vesper Hollow: Bellflame</h2>
+          <p>
+            A cold valley, a living flame, and a roll decided before the
+            narration. Explore the narrative proof of concept.
+          </p>
+          <Link
+            href="https://thehowlingwhispers.com/vesper"
+            className="button secondary"
+          >
+            Explore Bellflame <ArrowUpRight size={18} />
+          </Link>
+        </article>
+      </div>
+      <div className="notice">
+        <PawPrint size={25} />
+        <p>
+          <strong>Bring something of your own.</strong> Share music, art,
+          stories or a project in the community. We’re building this collection
+          together.
+        </p>
+      </div>
+    </section>
   );
 }
 const stages = [
@@ -398,7 +682,7 @@ function Ecosystem() {
   const s = stages[selected];
   return (
     <section className="section shell page-section">
-      <p className="eyebrow">THE BIGGER EXPERIMENT</p>
+      <p className="eyebrow">TRY AN EXPERIMENT / EXPLORE THE CONNECTIONS</p>
       <h1>
         Stories happen.
         <br />
@@ -408,6 +692,20 @@ function Ecosystem() {
         Separate systems, connected by a shared idea: build a world, explore it,
         and learn from the stories it produces.
       </p>
+      <div className="experiment-links">
+        <Link
+          href="https://praxis.thehowlingwhispers.com/"
+          className="button primary"
+        >
+          Try Praxis
+        </Link>
+        <Link
+          href="https://thehowlingwhispers.com/vesper"
+          className="button secondary"
+        >
+          Explore Bellflame
+        </Link>
+      </div>
       <div className="ecosystem-tabs">
         {stages.map((s, i) => (
           <button
@@ -517,9 +815,6 @@ function Archive() {
           instructions.
         </p>
         <div className="actions">
-          <Link href={`${GITHUB}/HW-Chatty`} className="button primary">
-            Chatty repository
-          </Link>
           <Link
             href="https://sandbox.thehowlingwhispers.com/"
             className="button secondary"
@@ -614,11 +909,16 @@ export function App() {
               <em>curiosity.</em>
             </h1>
             <p className="page-intro">
-              Find a world to build, a story to explore, or an experiment to
-              follow. Availability is shown on each project.
+              Every direction in Howling Whispers: creative tools, research,
+              private projects and experiments. Some are ready to try; others
+              are still taking shape.
             </p>
             <Catalog />
           </section>
+        ) : page === "documentation" ? (
+          <Documentation />
+        ) : page === "creations" ? (
+          <Creations />
         ) : page === "experiment" ? (
           <Ecosystem />
         ) : page === "community" ? (

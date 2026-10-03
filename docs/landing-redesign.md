@@ -1,37 +1,54 @@
-# Howling Whispers project hub
+# Coda's workshop: Howling Whispers discovery hub
 
-The welcome site is a responsive project directory and starting point for the
-Howling Whispers ecosystem. It retains the existing hash routes: welcome,
-projects, experiment, community and archive, including their legacy aliases.
+The welcome site covers the whole ecosystem: projects, public documentation,
+creative work, prototypes and community. Existing hash aliases still work.
 
-## Visitor experience
+## New content and navigation
 
-- Midnight blue surfaces, cyan actions and violet accents, with a light theme.
-- A starting-point selector for worldbuilding, roleplay and community.
-- Six project cards with text search and availability filtering.
-- Speculus directs visitors to Orbis rather than a standalone simulator boot.
-- Project descriptions distinguish experimental tools, prototypes and backend
-  development; no runtime health or automatic release feed is implied.
-- An interactive ecosystem explanation and Discord, Reddit and GitHub links.
-- Chatty remains in the archive, with repository setup instructions and the
-  existing legacy-site link.
+- Ten project directions, including private/reserved work with honest labels.
+- Documentation tab: nine reviewed public document snapshots, full-text search,
+  project filters, deep-linked Markdown reader, source links and capture dates.
+- Creations tab: official music channel and Vesper Hollow: Bellflame entry.
+- Experiments: direct entry points to Praxis and Bellflame, alongside the
+  world-development ecosystem explanation.
+- Homepage features different project areas and architecture reading selections.
+- Snow-white, ice-blue and cyan theme, optional dark theme and original Coda art.
 
-Coda's Den remains available through its existing /coda route and private-link
-entry. The redesign does not change its source, music layer, authentication,
-room data or server configuration. No public navigation link to it is added.
+Document bodies are bundled in `src/public-documents.json`; readers work without
+GitHub calls or credentials. This is an explicitly selected public collection,
+not an automatic mirror of every repository file. Update snapshots deliberately
+from public sources. Capture dates are retrieval dates, not release dates. The
+reader notes that snapshots may differ from current implementation. Source
+relative links resolve against the original GitHub document. HTML is skipped,
+remote images are omitted and unsupported URL schemes are refused.
 
-## Maintenance
+Private repositories have descriptive entries without private document imports
+or inaccessible source links. Coda's Den `/coda` remains a private-link entry;
+its route, music, room permissions, backend and UI source are unchanged.
 
-Project cards are curated in src/App.tsx. Keep availability and descriptions
-aligned with repository evidence. A Try now card indicates a navigation entry,
-not a production health check. Shared music remains implemented in Coda's Den.
+## Artwork
+
+Asset: `public/art/coda-workshop.webp` (1536 × 1024, approximately 267 KB).
+Created with the built-in image generation tool, then encoded to WebP for the
+website. No existing public artwork was replaced.
+
+Prompt: A clearly adult anthropomorphic female Alaskan Malamute beastfolk named
+Coda, snowy white fluffy fur with pale ice-blue patches and cyan highlights, no
+black fur, upright canine ears, fluffy tail, expressive blue eyes, warm
+mischievous smile. Fully clothed in a cozy blue cardigan, holding her official
+clipboard. Welcoming creative workshop with sketchbooks, story maps, headphones,
+music paper, a terminal monitor and worldbuilding books. Painterly fantasy
+editorial illustration, snowy daylight, cyan glow, blue and white palette,
+hints of lavender. Wide 3:2 composition, Coda right of center, airy pale blue
+space at left. No text, watermark or childish proportions.
 
 ## Validation
 
-Build, 79 server tests and 7 UI tests pass. Browser checks cover all five hash
-routes at 1440px and 390px, horizontal overflow, search/reset, availability
-filters, starting-point switching, theme switching and uncaught runtime errors.
-The page has also been inspected in desktop and phone screenshots.
+Production build passes, 79 server tests pass and 7 existing UI tests pass.
+Browser verification at 1440 and 390 pixels covers all seven tabs, horizontal
+overflow, artwork decoding, documentation search and empty-result reset, project
+filtering, document navigation/return, project availability filtering, persisted
+themes and uncaught runtime errors. Desktop and phone screenshots inspected.
 
-Deployment uses the existing Vienna host workflow. This source change alone
-does not publish the updated welcome site.
+Deployment continues through the existing Vienna host workflow. A GitHub commit
+does not deploy the site by itself.
