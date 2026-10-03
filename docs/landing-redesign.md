@@ -53,3 +53,15 @@ themes and uncaught runtime errors. Desktop and phone screenshots inspected.
 
 Deployment continues through the existing Vienna host workflow. A GitHub commit
 does not deploy the site by itself.
+
+## Social previews
+
+Open Graph and Twitter metadata use `/coda-social-preview.png` (1200 × 630),
+matching the Coda artwork and snowy palette. The new filename replaces the old
+green `og-banner.png` metadata reference. Width, height, type and alternative
+text are explicit. To regenerate the raster from its editable SVG source, run
+`node scripts/render-social-preview.mjs`.
+
+After deployment, old Discord messages may retain their cached preview. Share
+`https://thehowlingwhispers.com/?v=coda` to request a fresh preview. This uses the
+same homepage; it does not change the canonical URL.

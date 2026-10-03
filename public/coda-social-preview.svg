@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<defs><linearGradient id="snow"><stop stop-color="#f3f9fd"/><stop offset="1" stop-color="#d8effa"/></linearGradient><clipPath id="portrait"><rect x="662" y="36" width="502" height="558" rx="34"/></clipPath></defs>
+<rect width="1200" height="630" fill="url(#snow)"/>
+<image href="art/coda-workshop.webp" x="432" y="36" width="837" height="558" clip-path="url(#portrait)"/>
+<text x="60" y="98" fill="#087f9c" font-family="DejaVu Sans,sans-serif" font-size="17" font-weight="bold" letter-spacing="2">HOWLING WHISPERS</text>
+<g font-family="DejaVu Sans,sans-serif" font-size="53" font-weight="bold"><text x="56" y="220" fill="#16334d">A little curiosity.</text><text x="56" y="290" fill="#087f9c">A whole lot of</text><text x="56" y="360" fill="#087f9c">possibility.</text></g>
+<text x="60" y="428" fill="#526e85" font-family="DejaVu Sans,sans-serif" font-size="24">Software. Stories. Music. Worlds.</text>
+<path d="M60 480H606" stroke="#b7d7e8"/>
+<text x="60" y="530" fill="#16334d" font-family="DejaVu Sans,sans-serif" font-size="20">Come find what we’re building next.</text>
+<text x="60" y="573" fill="#087f9c" font-family="DejaVu Sans,sans-serif" font-size="18">thehowlingwhispers.com</text>
+</svg>
