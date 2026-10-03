@@ -1,26 +1,37 @@
-# Howling Whispers welcome hub
+# Howling Whispers project hub
 
-The hub welcomes visitors into an experimental family of projects. Its five hash-linked views are Welcome, Projects, The Experiment, Community, and Archive. A shared project catalog and category filters leave room for unrelated future projects.
+The welcome site is a responsive project directory and starting point for the
+Howling Whispers ecosystem. It retains the existing hash routes: welcome,
+projects, experiment, community and archive, including their legacy aliases.
 
-## Experience
+## Visitor experience
 
-- Responsive forest, sage, and cream palette with a saved light/dark preference.
-- Lightweight SVG world illustration. It is conceptual artwork, not a playable map.
-- Gentle transitions, visible keyboard focus, a skip link, touch-sized controls, and a reduced-motion alternative.
-- Orbis is the public starting point. Speculus opens through the world's Simulate action in Orbis.
-- Fabula and Studium remain explicitly in development. Mouseion is a planned creation layer; the EVE utility is private and in development.
-- Interactive Orbis → Speculus → Fabula → Studium cycle, with human review before discoveries return to Orbis.
-- Existing section hashes are supported as aliases. Navigation supports browser history and direct links.
-- Updated metadata, static fallback, favicon, and PNG social preview.
+- Midnight blue surfaces, cyan actions and violet accents, with a light theme.
+- A starting-point selector for worldbuilding, roleplay and community.
+- Six project cards with text search and availability filtering.
+- Speculus directs visitors to Orbis rather than a standalone simulator boot.
+- Project descriptions distinguish experimental tools, prototypes and backend
+  development; no runtime health or automatic release feed is implied.
+- An interactive ecosystem explanation and Discord, Reddit and GitHub links.
+- Chatty remains in the archive, with repository setup instructions and the
+  existing legacy-site link.
+
+Coda's Den remains available through its existing /coda route and private-link
+entry. The redesign does not change its source, music layer, authentication,
+room data or server configuration. No public navigation link to it is added.
+
+## Maintenance
+
+Project cards are curated in src/App.tsx. Keep availability and descriptions
+aligned with repository evidence. A Try now card indicates a navigation entry,
+not a production health check. Shared music remains implemented in Coda's Den.
 
 ## Validation
 
-Production TypeScript/Vite build passed. Headless Chromium checked all five views at 320, 390, 768, and 1440 pixels with no document overflow or runtime errors. Verified project filtering, cycle selection, theme persistence after reload, reduced-motion behavior, and legacy deep links. Desktop, phone, light theme, and cycle screenshots were visually inspected. An overflowing illustration caption and crowded mobile cycle label were fixed during inspection.
+Build, 79 server tests and 7 UI tests pass. Browser checks cover all five hash
+routes at 1440px and 390px, horizontal overflow, search/reset, availability
+filters, starting-point switching, theme switching and uncaught runtime errors.
+The page has also been inspected in desktop and phone screenshots.
 
-Validation was local. External services and the production server were not deployment-tested. Google Fonts is optional; system fonts provide a fallback.
-
-## Preview
-
-![Welcome on desktop](previews/welcome-desktop.png)
-
-![Welcome on a phone](previews/welcome-mobile.png)
+Deployment uses the existing Vienna host workflow. This source change alone
+does not publish the updated welcome site.

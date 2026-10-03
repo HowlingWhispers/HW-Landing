@@ -1,39 +1,34 @@
 import { useEffect, useState } from "react";
 import {
-  ArrowDown,
-  ArrowRight,
-  ArrowUpRight,
   BookOpen,
-  Check,
-  ChevronRight,
   Compass,
   FlaskConical,
   Github,
   Layers3,
   MessageCircle,
   Moon,
-  Orbit,
   Search,
   Sparkles,
   Sun,
   Terminal,
   Wrench,
+  Orbit,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 type Page = "welcome" | "projects" | "experiment" | "community" | "archive";
 const pages: { id: Page; label: string }[] = [
-  { id: "welcome", label: "Welcome" },
-  { id: "projects", label: "Projects" },
-  { id: "experiment", label: "The Experiment" },
+  { id: "welcome", label: "Home" },
+  { id: "projects", label: "Explore" },
+  { id: "experiment", label: "The ecosystem" },
   { id: "community", label: "Community" },
   { id: "archive", label: "Archive" },
 ];
 const ORBIS = "https://lib.thehowlingwhispers.com/";
 const DISCORD = "https://discord.gg/Q7RQCmFZ8Y";
 const GITHUB = "https://github.com/HowlingWhispers";
-const readPage = (): Page => {
-  const hash = location.hash.slice(1);
+function readPage(): Page {
+  const h = location.hash.slice(1);
   const aliases: Record<string, Page> = {
     top: "welcome",
     available: "projects",
@@ -41,42 +36,88 @@ const readPage = (): Page => {
     legacy: "archive",
     utilities: "projects",
   };
-  return pages.find((p) => p.id === hash)?.id ?? aliases[hash] ?? "welcome";
-};
-
+  return pages.find((p) => p.id === h)?.id ?? aliases[h] ?? "welcome";
+}
 type Project = {
   name: string;
-  category: "Worlds & roleplay" | "Utilities";
+  tag: string;
   status: string;
   description: string;
   icon: LucideIcon;
   color: string;
   href?: string;
   action?: string;
+  repo: string;
 };
 const projects: Project[] = [
   {
     name: "Orbis",
-    category: "Worlds & roleplay",
-    status: "Available · Experimental",
+    tag: "Worldbuilding",
+    status: "Experimental",
     description:
-      "Build a world and step into its stories. Orbis brings worldbuilding, roleplay, and the connected systems behind them together in one project.",
+      "Give your world a home. Build connected characters, places, species and lore in one canonical library.",
     icon: BookOpen,
-    color: "sage",
+    color: "cyan",
     href: ORBIS,
-    action: "Enter Orbis",
+    action: "Open Orbis",
+    repo: "HW-Orbis",
   },
   {
-    name: "EVE Account Hub",
-    category: "Utilities",
-    status: "Private · In development",
+    name: "Speculus",
+    tag: "Roleplay",
+    status: "Experimental",
     description:
-      "A separate experiment in EVE Online account tools, markets, assets, and route planning. Not publicly available.",
+      "Step into a scene with your persona. Explore characters and stories drawn from your Orbis world.",
+    icon: Terminal,
+    color: "violet",
+    href: ORBIS,
+    action: "Start through Orbis",
+    repo: "HW-Speculus",
+  },
+  {
+    name: "Fabula",
+    tag: "Runtime",
+    status: "Pre-alpha",
+    description:
+      "A foundation for private adventures, canonical NPC presence and player contributions to shared history.",
+    icon: Layers3,
+    color: "orange",
+    repo: "HW-Fabula",
+  },
+  {
+    name: "Praxis",
+    tag: "Story experiment",
+    status: "Prototype",
+    description:
+      "Authored stories meet freeform play. Explore the experiment in time, fatigue and structured consequences.",
     icon: Compass,
-    color: "blue",
+    color: "pink",
+    href: "https://praxis.thehowlingwhispers.com/",
+    action: "Visit the prototype",
+    repo: "HW-Praxis",
+  },
+  {
+    name: "Studium",
+    tag: "Research",
+    status: "In development",
+    description:
+      "Study simulation history and prepare evidence-backed worldbuilding proposals for an author to review.",
+    icon: Search,
+    color: "cyan",
+    repo: "HW-Studium",
+  },
+  {
+    name: "EVE Copilot",
+    tag: "Utility",
+    status: "Private project",
+    description:
+      "An independent experiment in EVE account tools, market analysis, cargo planning and corporation comms.",
+    icon: Orbit,
+    color: "violet",
+    repo: "HW-EVE-Copilot",
   },
 ];
-function External({
+function Link({
   href,
   children,
   className = "",
@@ -93,543 +134,399 @@ function External({
       rel="noopener noreferrer"
     >
       {children}
-      <ArrowUpRight size={17} aria-hidden="true" />
       <span className="sr-only"> (opens in a new tab)</span>
     </a>
   );
 }
-function WorldArt() {
+function Card({ p }: { p: Project }) {
+  const Icon = p.icon;
   return (
-    <div className="world-art" aria-hidden="true">
-      <div className="art-halo" />
-      <svg className="orbital-art" viewBox="0 0 620 620" fill="none">
-        <defs>
-          <radialGradient id="sphere" cx="32%" cy="27%" r="75%">
-            <stop stopColor="#60877c" />
-            <stop offset=".5" stopColor="#243e3c" />
-            <stop offset="1" stopColor="#0c191d" />
-          </radialGradient>
-          <linearGradient id="orbit" x1="0" y1="0" x2="620" y2="620">
-            <stop stopColor="#d6c4a0" stopOpacity=".85" />
-            <stop offset=".5" stopColor="#aecabf" stopOpacity=".2" />
-            <stop offset="1" stopColor="#d6c4a0" stopOpacity=".6" />
-          </linearGradient>
-          <clipPath id="globe-clip">
-            <circle cx="310" cy="310" r="151" />
-          </clipPath>
-        </defs>
-        <g className="orbit-outer">
-          <circle
-            cx="310"
-            cy="310"
-            r="270"
-            stroke="url(#orbit)"
-            strokeDasharray="1 12"
-          />
-          <circle
-            cx="310"
-            cy="310"
-            r="235"
-            stroke="url(#orbit)"
-            strokeWidth=".6"
-          />
-          <path
-            d="M310 27v18M310 575v18M27 310h18M575 310h18"
-            stroke="#b9c8b9"
-          />
-          <circle cx="310" cy="75" r="5" fill="#dbc696" />
-          <circle cx="310" cy="545" r="3" fill="#acc3ba" />
-        </g>
-        <ellipse
-          cx="310"
-          cy="310"
-          rx="281"
-          ry="110"
-          transform="rotate(-32 310 310)"
-          stroke="url(#orbit)"
-        />
-        <circle
-          cx="310"
-          cy="310"
-          r="151"
-          fill="url(#sphere)"
-          stroke="#97b6a3"
-          strokeOpacity=".5"
-        />
-        <g
-          clipPath="url(#globe-clip)"
-          stroke="#b2cbb5"
-          strokeOpacity=".2"
-          strokeWidth=".8"
-        >
-          {[45, 92, 132].map((r) => (
-            <ellipse
-              key={r}
-              cx="310"
-              cy="310"
-              rx={r}
-              ry="151"
-              transform="rotate(-22 310 310)"
-            />
-          ))}
-          {[225, 265, 310, 355, 395].map((y) => (
-            <ellipse
-              key={y}
-              cx="310"
-              cy={y}
-              rx="156"
-              ry="24"
-              transform="rotate(-22 310 310)"
-            />
-          ))}
-          <path
-            d="M179 236q60 18 65 65t58 10 45 57 81 21M198 225q23-43 76-1t51 7 65 29 28 46M196 339q41-4 43 37t52 21M293 172q15 45 63 31t52 44"
-            strokeWidth="1.4"
-            strokeOpacity=".55"
-          />
-        </g>
-        <ellipse
-          cx="310"
-          cy="310"
-          rx="207"
-          ry="187"
-          transform="rotate(34 310 310)"
-          stroke="url(#orbit)"
-          strokeDasharray="4 8"
-        />
-        <path d="M72 459Q306 547 544 165" stroke="url(#orbit)" />
-        <g fill="#dac79e">
-          <circle cx="157" cy="198" r="4" />
-          <circle cx="482" cy="417" r="5" />
-          <path d="M515 192v14m-7-7h14M114 404v12m-6-6h12" stroke="#dac79e" />
-        </g>
-      </svg>
-      <span className="art-label art-label--top">
-        <i /> A LITTLE WORLD OF POSSIBILITIES
-      </span>
-      <span className="art-label art-label--bottom">
-        IMAGINATION, STILL IN ORBIT <span>↗</span>
-      </span>
-      <span className="art-caption">
-        Conceptual illustration · not a playable map
-      </span>
-    </div>
-  );
-}
-function ProjectCard({
-  project,
-  number,
-}: {
-  project: Project;
-  number: number;
-}) {
-  const Icon = project.icon;
-  return (
-    <article className={`project-card ${project.color}`}>
+    <article className={`project-card ${p.color}`}>
       <div className="card-top">
-        <span className="project-icon">
-          <Icon size={23} strokeWidth={1.5} />
-        </span>
-        <span className="card-number">0{number}</span>
+        <Icon size={27} />
+        <span className="status">{p.status}</span>
       </div>
-      <div className={`status ${project.href ? "available" : ""}`}>
-        <i />
-        {project.status}
+      <span className="eyebrow">{p.tag}</span>
+      <h3>{p.name}</h3>
+      <p>{p.description}</p>
+      <div className="card-bottom">
+        {p.href ? (
+          <Link className="card-action" href={p.href}>
+            {p.action}
+          </Link>
+        ) : (
+          <span className="workbench">
+            <Wrench size={15} /> On the workbench
+          </span>
+        )}
+        <Link href={`${GITHUB}/${p.repo}`} className="source-link">
+          <Github size={18} />
+          <span className="sr-only">{p.name} source repository</span>
+        </Link>
       </div>
-      <h3>{project.name}</h3>
-      <p>{project.description}</p>
-      {project.name === "Orbis" && (
-        <div className="project-systems">
-          <a href="#experiment" className="text-link">
-            How the systems connect <ArrowRight size={16} />
-          </a>
-        </div>
-      )}
-      {project.href ? (
-        <External href={project.href} className="card-link">
-          {project.action}
-        </External>
-      ) : (
-        <span className="not-open">
-          On the workbench <Wrench size={14} />
-        </span>
-      )}
     </article>
   );
 }
-function Welcome() {
+function Catalog() {
+  const [q, setQ] = useState("");
+  const [filter, setFilter] = useState("All");
+  const visible = projects.filter(
+    (p) =>
+      (filter === "All" || (filter === "Try now" ? !!p.href : !p.href)) &&
+      `${p.name} ${p.description} ${p.tag}`
+        .toLowerCase()
+        .includes(q.toLowerCase()),
+  );
+  return (
+    <>
+      <div className="catalog-tools">
+        <div className="filters" aria-label="Project availability">
+          {["All", "Try now", "In development"].map((f) => (
+            <button
+              key={f}
+              aria-pressed={f === filter}
+              onClick={() => setFilter(f)}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+        <label className="project-search">
+          <Search size={18} />
+          <span className="sr-only">Search projects</span>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Find your next curiosity…"
+            type="search"
+          />
+        </label>
+      </div>
+      <p className="result-count" aria-live="polite">
+        {visible.length} {visible.length === 1 ? "project" : "projects"}
+      </p>
+      <div className="project-grid">
+        {visible.map((p) => (
+          <Card key={p.name} p={p} />
+        ))}
+      </div>
+      {!visible.length && (
+        <div className="empty">
+          <h3>No projects found.</h3>
+          <p>Try another search or show all projects.</p>
+          <button
+            className="button secondary"
+            onClick={() => {
+              setQ("");
+              setFilter("All");
+            }}
+          >
+            Reset filters
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+function Home() {
+  const [goal, setGoal] = useState(0);
+  const goals = [
+    {
+      label: "Build a world",
+      title: "Start with a place. Give it a story.",
+      text: "Open Orbis to create or explore worlds and the people, places and lore within them.",
+      action: "Enter the library",
+      href: ORBIS,
+    },
+    {
+      label: "Start a story",
+      title: "Your persona. A world of possibilities.",
+      text: "Choose an asset in Orbis and use Simulate to launch Speculus. Bring your own persona into the scene.",
+      action: "Choose a starting point",
+      href: ORBIS,
+    },
+    {
+      label: "Join the makers",
+      title: "Bring an idea. Find good company.",
+      text: "Meet the community on Discord to talk worldbuilding, share experiments and help test what comes next.",
+      action: "Join the Discord",
+      href: DISCORD,
+    },
+  ];
   return (
     <>
       <section className="hero shell">
         <div className="hero-copy">
-          <p className="eyebrow">
-            <span className="tiny-star">✳</span> A HOME FOR CURIOUS MINDS
-          </p>
+          <p className="eyebrow">INDEPENDENT WORLDS / OPEN-ENDED STORIES</p>
           <h1>
             Every whisper
             <br />
             becomes <em>a world.</em>
           </h1>
           <p className="hero-description">
-            Worlds to build. Stories to step into.
-            <br className="desktop-break" /> Strange little ideas worth
-            exploring.
-          </p>
-          <p className="hero-detail">
-            Welcome to Howling Whispers, an independent home for experimental AI
-            roleplay, worldbuilding, and whatever we dream up next.
+            A home for worldbuilders, storytellers
+            <br className="desktop-break" /> and wonderfully strange
+            experiments.
           </p>
           <div className="actions">
-            <External href={ORBIS} className="button primary">
+            <Link href={ORBIS} className="button primary">
               Explore Orbis
-            </External>
-            <a href="#projects" className="text-link">
-              Find your curiosity <ArrowRight size={17} />
+            </Link>
+            <a href="#projects" className="button secondary">
+              Find a project
             </a>
           </div>
           <p className="hero-note">
-            <span className="live-dot" /> Heavily experimental. Happily in
-            progress.
+            <FlaskConical size={16} /> Built with curiosity. Still experimental.
           </p>
         </div>
-        <WorldArt />
+        <div className="hero-index">
+          <div className="index-header">
+            <span className="eyebrow">THE HOWLING WHISPERS FIELD NOTES</span>
+            <Sparkles size={21} />
+          </div>
+          <div className="index-number" aria-hidden="true">
+            HW<span> / 01</span>
+          </div>
+          <p className="index-title">
+            A world is more
+            <br />
+            than its <em>first story.</em>
+          </p>
+          <p>
+            Build its foundations. Meet its characters.
+            <br />
+            Discover what happens next.
+          </p>
+          <div className="index-bottom">
+            <span>WORLD / CHARACTER / STORY</span>
+            <a href="#experiment">Explore the connections</a>
+          </div>
+        </div>
       </section>
-      <div className="intro-strip shell">
-        <span>IMAGINE. CREATE. EXPLORE. REPEAT.</span>
-        <a href="#projects">
-          A growing family of projects <ArrowDown size={15} />
-        </a>
-      </div>
+      <section className="start-section shell">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">YOUR FIRST CHAPTER</p>
+            <h2>What brings you here?</h2>
+          </div>
+          <span className="section-number">01 / BEGIN</span>
+        </div>
+        <div className="start-panel">
+          <div className="goal-tabs" aria-label="Choose a starting point">
+            {goals.map((g, i) => (
+              <button
+                key={g.label}
+                aria-pressed={goal === i}
+                onClick={() => setGoal(i)}
+              >
+                <span>0{i + 1}</span>
+                {g.label}
+              </button>
+            ))}
+          </div>
+          <div className="goal-detail" aria-live="polite">
+            <h3>{goals[goal].title}</h3>
+            <p>{goals[goal].text}</p>
+            <Link href={goals[goal].href} className="text-link">
+              {goals[goal].action}
+            </Link>
+          </div>
+        </div>
+      </section>
       <section className="section shell">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">MAKE YOURSELF AT HOME</p>
-            <h2>Where will you begin?</h2>
+            <p className="eyebrow">EXPLORE THE WORKBENCH</p>
+            <h2>
+              Small beginnings.
+              <br />
+              <em>Growing possibilities.</em>
+            </h2>
           </div>
-          <a href="#projects" className="text-link">
-            All projects <ArrowRight size={17} />
-          </a>
+          <span className="section-number">02 / DISCOVER</span>
         </div>
-        <div className="project-grid featured">
-          {projects
-            .filter((p) => p.name === "Orbis")
-            .map((p, i) => (
-              <ProjectCard key={p.name} project={p} number={i + 1} />
-            ))}
-        </div>
-        <p className="start-note">
-          <BookOpen size={16} /> New here? Create or choose a world in Orbis,
-          then use <strong>Simulate</strong> to enter Speculus.
-        </p>
+        <Catalog />
       </section>
-      <section className="invitation shell">
-        <span className="invitation-mark" aria-hidden="true">
-          ✳
-        </span>
+      <section className="community-banner shell">
         <div>
-          <p className="eyebrow">THE BEAUTY IS IN THE BECOMING</p>
-          <h2>
-            Come for a world.
-            <br />
-            <em>Stay for the possibilities.</em>
-          </h2>
+          <p className="eyebrow">GOOD IDEAS NEED COMPANY</p>
+          <h2>Pull up a chair.</h2>
           <p>
-            Some ideas grow into tools. Others become stories. This is a place
-            to follow that curiosity, together.
+            Share a world, test an experiment, or help us chase a loose thread.
           </p>
         </div>
-        <a
-          href="#experiment"
-          className="circle-link"
-          aria-label="Explore the experiment"
-        >
-          <ArrowUpRight size={30} />
-        </a>
-      </section>
-      <section className="experimental-note shell">
-        <FlaskConical size={22} />
-        <div>
-          <h3>A work in progress, in the best sense.</h3>
-          <p>
-            This is a heavily experimental hobby project. Features can change,
-            break, or be rebuilt. Fabula and Studium are still in development.
-            Bring your curiosity, and tell us what you find.
-          </p>
-        </div>
-        <a href="#community" className="text-link">
-          Join in <ArrowRight size={17} />
-        </a>
+        <Link href={DISCORD} className="button primary">
+          Join the community
+        </Link>
       </section>
     </>
-  );
-}
-function Projects() {
-  const [filter, setFilter] = useState("All projects");
-  return (
-    <section className="section page-section shell">
-      <p className="eyebrow">FOLLOW YOUR CURIOSITY</p>
-      <h1>
-        A growing family
-        <br />
-        of <em>possibilities.</em>
-      </h1>
-      <p className="page-intro">
-        Orbis brings our worldbuilding and roleplay systems together as one
-        project. There is room alongside it for independent tools, experiments,
-        and entirely different adventures.
-      </p>
-      <div className="filters" aria-label="Filter projects">
-        {["All projects", "Worlds & roleplay", "Utilities"].map((f) => (
-          <button
-            key={f}
-            aria-pressed={f === filter}
-            onClick={() => setFilter(f)}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
-      <div className="project-grid">
-        {projects
-          .filter((p) => filter === "All projects" || p.category === filter)
-          .map((p) => (
-            <ProjectCard
-              key={p.name}
-              project={p}
-              number={projects.indexOf(p) + 1}
-            />
-          ))}
-      </div>
-      <p className="start-note">
-        <BookOpen size={16} /> Speculus launches from a world’s Simulate action
-        in Orbis.
-      </p>
-      <div className="quiet-callout">
-        <Sparkles size={22} />
-        <div>
-          <h3>The next idea has room to grow.</h3>
-          <p>
-            This hub will grow with the projects. No fixed edges, no final
-            shape.
-          </p>
-        </div>
-        <a href="#community" className="text-link">
-          Bring an idea <ArrowRight size={16} />
-        </a>
-      </div>
-    </section>
   );
 }
 const stages = [
   {
     name: "Orbis",
-    title: "Give the world its roots.",
-    text: "Authors shape the people, places, relationships, and canon that make a world its own.",
     icon: BookOpen,
-    status: "Available · Experimental",
+    title: "Build the foundations.",
+    text: "The canonical library holds authored worlds, assets, relationships, ownership and revisions.",
+    status: "Experimental",
   },
   {
     name: "Speculus",
-    title: "Let a story happen.",
-    text: "Bring that context into scenes and roleplay. Explore how characters respond and what happens next.",
     icon: Terminal,
-    status: "Available · Experimental",
+    title: "Step into the story.",
+    text: "The simulator launches from Orbis and assembles the scene, persona and relevant world context for roleplay.",
+    status: "V3 · Experimental",
   },
   {
     name: "Fabula",
-    title: "Carry the consequences.",
-    text: "The planned runtime gives time, inventory, travel, and events a persistent place beyond the prose.",
     icon: Layers3,
-    status: "In development",
+    title: "Make consequences matter.",
+    text: "The pre-alpha runtime establishes private world sessions, canonical NPC presence and reviewed player contributions.",
+    status: "Pre-alpha",
   },
   {
     name: "Studium",
-    title: "Discover what might belong.",
-    text: "Study the history, find patterns, and prepare possible additions for an author to review.",
     icon: Search,
+    title: "Learn from what happened.",
+    text: "The research backend studies sanitized history and prepares proposals. Authors decide what becomes canon.",
     status: "In development",
   },
 ];
-function Experiment() {
+function Ecosystem() {
   const [selected, setSelected] = useState(0);
-  const stage = stages[selected];
+  const s = stages[selected];
   return (
-    <section className="section page-section shell">
-      <p className="eyebrow">INSIDE ORBIS</p>
+    <section className="section shell page-section">
+      <p className="eyebrow">THE BIGGER EXPERIMENT</p>
       <h1>
-        A story ends.
+        Stories happen.
         <br />
-        <em>A world keeps growing.</em>
+        <em>Worlds keep growing.</em>
       </h1>
       <p className="page-intro">
-        What if play could enrich the world that made it possible? This is the
-        cycle we are working toward, with the author always in control of canon.
+        Separate systems, connected by a shared idea: build a world, explore it,
+        and learn from the stories it produces.
       </p>
-      <div className="cycle-layout">
-        <div className="cycle" aria-label="Explore the proposed world cycle">
-          <svg viewBox="0 0 500 500" aria-hidden="true">
-            <defs>
-              <marker
-                id="arrowhead"
-                markerWidth="8"
-                markerHeight="8"
-                refX="4"
-                refY="4"
-                orient="auto"
-              >
-                <path d="M1 1L6 4L1 7" fill="none" stroke="currentColor" />
-              </marker>
-            </defs>
-            <path
-              d="M290 75Q425 75 425 208M425 290Q425 425 292 425M208 425Q75 425 75 292"
-              markerEnd="url(#arrowhead)"
-            />
-            <path
-              className="review-path"
-              d="M75 208Q75 75 208 75"
-              markerEnd="url(#arrowhead)"
-              strokeDasharray="5 6"
-            />
-          </svg>
-          <div className="cycle-center">
-            <Orbit size={32} strokeWidth={1} />
-            <strong>Living Canon</strong>
-            <span>THE PROPOSED CYCLE</span>
-          </div>
-          {stages.map((s, i) => (
-            <button
-              className={`cycle-node node-${i}`}
-              key={s.name}
-              onClick={() => setSelected(i)}
-              aria-pressed={selected === i}
-            >
-              <s.icon size={21} />
-              <span>{s.name}</span>
-              <small>{i < 2 ? "Explore now" : "In development"}</small>
-            </button>
-          ))}
-        </div>
-        <div className="cycle-detail" aria-live="polite">
-          <span className="eyebrow">
-            0{selected + 1} / {stage.name}
-          </span>
-          <h2>{stage.title}</h2>
-          <p>{stage.text}</p>
-          <span className="status">
-            <i />
-            {stage.status}
-          </span>
-          <div className="review-note">
-            <Check size={18} />
-            <p>
-              <strong>Studium → human review → Orbis</strong>Discoveries are
-              proposals. Only reviewed and accepted changes can enrich the
-              world’s canon.
-            </p>
-          </div>
+      <div className="ecosystem-tabs">
+        {stages.map((s, i) => (
           <button
-            className="text-link"
-            onClick={() => setSelected((selected + 1) % 4)}
+            key={s.name}
+            aria-pressed={selected === i}
+            onClick={() => setSelected(i)}
           >
-            Explore the next stage <ArrowRight size={17} />
+            <s.icon size={24} />
+            <span>0{i + 1}</span>
+            <strong>{s.name}</strong>
           </button>
-        </div>
+        ))}
       </div>
-      <div className="quiet-callout">
+      <article className="ecosystem-detail" aria-live="polite">
+        <span className="eyebrow">
+          {s.name} / {s.status}
+        </span>
+        <h2>{s.title}</h2>
+        <p>{s.text}</p>
+        <Link href={`${GITHUB}/HW-${s.name}`} className="text-link">
+          Explore this project
+        </Link>
+      </article>
+      <div className="notice">
         <FlaskConical size={25} />
-        <div>
-          <h3>A direction, not a finished promise.</h3>
-          <p>
-            Orbis is available, with roleplay through Speculus. The complete
-            cycle, including Fabula and Studium, is still being built. Mouseion
-            is planned as the creation layer for new world content.
-          </p>
-        </div>
+        <p>
+          <strong>The full cycle is still being built.</strong> Studium
+          proposals require human review before entering Orbis canon. Praxis is
+          a separate story experiment; Mouseion remains a planned creation
+          layer.
+        </p>
       </div>
     </section>
   );
 }
 function Community() {
   return (
-    <section className="section page-section shell">
-      <p className="eyebrow">THERE IS A SEAT FOR YOU</p>
+    <section className="section shell page-section">
+      <p className="eyebrow">THE PEOPLE BEHIND THE WHISPERS</p>
       <h1>
-        Better with
+        Make something.
         <br />
-        <em>a little company.</em>
+        <em>Make it together.</em>
       </h1>
       <p className="page-intro">
-        Worldbuilders, curious visitors, testers, and people with an idea they
-        cannot quite leave alone. You are welcome here.
+        Worldbuilders, artists, developers, curious visitors and people who
+        enjoy testing unfinished things. There is room for you here.
       </p>
       <div className="community-grid">
-        <article className="community-panel">
-          <MessageCircle size={36} strokeWidth={1.2} />
-          <h2>Pull up a chair.</h2>
-          <p>
-            Share your worlds, ask questions, report a loose floorboard, or see
-            what we are trying next.
-          </p>
-          <External href={DISCORD} className="button primary">
-            Join our Discord
-          </External>
-          <span className="panel-footnote">
-            Worldbuilding · Feedback · Good company
-          </span>
-        </article>
-        <article className="community-panel">
-          <Github size={36} strokeWidth={1.2} />
-          <h2>Look under the hood.</h2>
-          <p>
-            Explore the repositories and follow the experiments as they take
-            shape. The unfinished parts are part of the story.
-          </p>
-          <External href={GITHUB} className="button secondary">
-            Explore GitHub
-          </External>
-          <span className="panel-footnote">
-            Independent · Hobby-built · Experimental
-          </span>
-        </article>
+        {[
+          {
+            title: "The community den",
+            text: "Talk to the makers, share stories and art, report a bug, or bring your next strange idea.",
+            icon: MessageCircle,
+            href: DISCORD,
+            action: "Join Discord",
+          },
+          {
+            title: "Follow the conversation",
+            text: "Visit our Reddit community for worldbuilding, music, creative experiments and project discussions.",
+            icon: Compass,
+            href: "https://www.reddit.com/r/TheHowlingWhispers/",
+            action: "Visit Reddit",
+          },
+          {
+            title: "Look under the hood",
+            text: "Explore the public repositories and follow the work as it takes shape.",
+            icon: Github,
+            href: GITHUB,
+            action: "Explore GitHub",
+          },
+        ].map((x) => (
+          <article className="community-panel" key={x.title}>
+            <x.icon size={30} />
+            <h2>{x.title}</h2>
+            <p>{x.text}</p>
+            <Link href={x.href} className="button secondary">
+              {x.action}
+            </Link>
+          </article>
+        ))}
       </div>
     </section>
   );
 }
 function Archive() {
   return (
-    <section className="section page-section shell">
-      <p className="eyebrow">EVERY PROJECT HAS A FIRST CHAPTER</p>
+    <section className="section shell page-section">
+      <p className="eyebrow">EARLIER CHAPTERS</p>
       <h1>
-        Where the
+        Keep the roots.
         <br />
-        <em>whispers began.</em>
+        <em>Grow something new.</em>
       </h1>
       <p className="page-intro">
-        Earlier experiments deserve a place on the shelf. Keep the history,
-        learn from it, and make something new.
+        The original all-in-one Howling Whispers application grew into Chatty, a
+        separate private roleplay project. Its history remains part of the
+        ecosystem.
       </p>
       <article className="archive-panel">
-        <span className="eyebrow">01 / THE ORIGINAL ROLEPLAY APP</span>
-        <h2>Howling Whispers Legacy</h2>
+        <Terminal size={32} />
+        <span className="eyebrow">THE ORIGINAL ROLEPLAY LINE</span>
+        <h2>Chatty</h2>
         <p>
-          The original all-in-one roleplay application is preserved for history
-          and reference. Its continuing roleplay line now carries the name
-          Chatty.
+          Character-driven conversations, scenes and private local stories.
+          Explore its source for current setup and Windows packaging
+          instructions.
         </p>
         <div className="actions">
-          <External
+          <Link href={`${GITHUB}/HW-Chatty`} className="button primary">
+            Chatty repository
+          </Link>
+          <Link
             href="https://sandbox.thehowlingwhispers.com/"
             className="button secondary"
           >
-            Open Chatty
-          </External>
-          <External href={`${GITHUB}/HW-Chatty`} className="text-link">
-            View source
-          </External>
+            Visit the legacy site
+          </Link>
         </div>
-        <span className="panel-footnote">
-          Historical reference · Separate from the current worldbuilding tools
-        </span>
       </article>
     </section>
   );
@@ -650,16 +547,14 @@ export function App() {
   useEffect(() => {
     document.title = `Howling Whispers | ${pages.find((p) => p.id === page)?.label}`;
   }, [page]);
-  function toggleTheme() {
+  function toggle() {
     const next = !light;
     setLight(next);
     document.documentElement.dataset.theme = next ? "light" : "dark";
     document.documentElement.style.colorScheme = next ? "light" : "dark";
     try {
       localStorage.setItem("hw.theme", next ? "light" : "dark");
-    } catch {
-      /* Theme remains usable without storage. */
-    }
+    } catch {}
   }
   return (
     <div className="app">
@@ -680,9 +575,7 @@ export function App() {
             href="#welcome"
             aria-label="Howling Whispers home"
           >
-            <span className="brand-symbol" aria-hidden="true">
-              ✳
-            </span>
+            <img src="/favicon.svg" alt="" />
             <span>
               HOWLING
               <br />
@@ -700,27 +593,34 @@ export function App() {
               </a>
             ))}
           </nav>
-          <div className="header-actions">
-            <button
-              className="theme-toggle"
-              onClick={toggleTheme}
-              aria-label={`Switch to ${light ? "dark" : "light"} theme`}
-            >
-              {light ? <Moon size={18} /> : <Sun size={18} />}
-            </button>
-            <External href={ORBIS} className="header-enter">
-              Enter Orbis
-            </External>
-          </div>
+          <button
+            className="theme-toggle"
+            onClick={toggle}
+            aria-label={`Switch to ${light ? "dark" : "light"} theme`}
+          >
+            {light ? <Moon size={19} /> : <Sun size={19} />}
+          </button>
         </div>
       </header>
-      <main id="main-content" tabIndex={-1} key={page} className="page-enter">
+      <main id="main-content" tabIndex={-1} key={page}>
         {page === "welcome" ? (
-          <Welcome />
+          <Home />
         ) : page === "projects" ? (
-          <Projects />
+          <section className="section shell page-section">
+            <p className="eyebrow">THE PROJECT DIRECTORY</p>
+            <h1>
+              Follow your
+              <br />
+              <em>curiosity.</em>
+            </h1>
+            <p className="page-intro">
+              Find a world to build, a story to explore, or an experiment to
+              follow. Availability is shown on each project.
+            </p>
+            <Catalog />
+          </section>
         ) : page === "experiment" ? (
-          <Experiment />
+          <Ecosystem />
         ) : page === "community" ? (
           <Community />
         ) : (
@@ -733,21 +633,19 @@ export function App() {
             Howling Whispers<span>✳</span>
           </a>
           <p>
-            A home for worlds, experiments,
+            Worlds, stories, and whatever
             <br />
-            and things yet to be imagined.
+            strange thing we build next.
           </p>
-          <div>
-            <External href={DISCORD}>Discord</External>
-            <External href={GITHUB}>GitHub</External>
-            <a href="#archive">
-              Archive <ChevronRight size={15} />
-            </a>
+          <div className="footer-links">
+            <Link href={DISCORD}>Discord</Link>
+            <Link href={GITHUB}>GitHub</Link>
+            <a href="#archive">Archive</a>
           </div>
         </div>
         <div className="footer-bottom">
           <span>© {new Date().getFullYear()} Howling Whispers</span>
-          <span>Independent. Experimental. Always becoming.</span>
+          <span>Independent / Experimental / In progress</span>
         </div>
         <p className="disclaimer">
           Some tools use third-party AI providers, including NovelAI. Howling
