@@ -10,12 +10,19 @@ export function openStore(path) {
     CREATE TABLE IF NOT EXISTS rooms(id TEXT PRIMARY KEY, owner TEXT REFERENCES users(id), title TEXT NOT NULL, mode TEXT NOT NULL DEFAULT 'reply', created INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS members(room TEXT REFERENCES rooms(id) ON DELETE CASCADE, user TEXT REFERENCES users(id), PRIMARY KEY(room,user));
     CREATE TABLE IF NOT EXISTS messages(seq INTEGER PRIMARY KEY AUTOINCREMENT, room TEXT REFERENCES rooms(id) ON DELETE CASCADE, author TEXT NOT NULL, name TEXT NOT NULL, content TEXT NOT NULL, created INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS images(id TEXT PRIMARY KEY, room TEXT NOT NULL REFERENCES rooms(id) ON DELETE CASCADE, uploader TEXT NOT NULL REFERENCES users(id), filename TEXT NOT NULL, alt TEXT NOT NULL DEFAULT '', mime TEXT NOT NULL, size INTEGER NOT NULL, width INTEGER NOT NULL, height INTEGER NOT NULL, storage_path TEXT NOT NULL UNIQUE, created INTEGER NOT NULL, attached INTEGER NOT NULL DEFAULT 0);
+    CREATE TABLE IF NOT EXISTS message_images(message_seq INTEGER NOT NULL REFERENCES messages(seq) ON DELETE CASCADE, image TEXT NOT NULL REFERENCES images(id) ON DELETE CASCADE, ordinal INTEGER NOT NULL, PRIMARY KEY(message_seq,image), UNIQUE(message_seq,ordinal));
     CREATE TABLE IF NOT EXISTS invites(token TEXT PRIMARY KEY, room TEXT REFERENCES rooms(id) ON DELETE CASCADE, expires INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS oauth(token TEXT PRIMARY KEY, expires INTEGER NOT NULL);
   `);
   const get = (sql, ...args) => db.prepare(sql).get(...args);
   const all = (sql, ...args) => db.prepare(sql).all(...args);
   const run = (sql, ...args) => db.prepare(sql).run(...args);
+  const history = (room, includePaths = false) => {
+    const messages = all('SELECT * FROM (SELECT seq,author,name,content,created FROM messages WHERE room=? ORDER BY seq DESC LIMIT 80) ORDER BY seq', room);
+    const images = all(`SELECT mi.message_seq,i.id,i.filename,i.alt,i.mime,i.size,i.width,i.height,i.storage_path FROM message_images mi JOIN images i ON i.id=mi.image JOIN messages m ON m.seq=mi.message_seq WHERE m.room=? ORDER BY mi.message_seq,mi.ordinal`, room);
+    return messages.map(message => ({ ...message, images: images.filter(image => image.message_seq === message.seq).map(image => ({ id:image.id,filename:image.filename,alt:image.alt,mime:image.mime,size:image.size,width:image.width,height:image.height,url:`/coda/api/rooms/${room}/images/${image.id}`,...(includePaths?{storagePath:image.storage_path}:{}) })) }));
+  };
   return { db, get, all, run,
     member: (room, user) => Boolean(get('SELECT 1 FROM members WHERE room=? AND user=?', room, user)),
     createRoom(user, title) {
@@ -25,8 +32,20 @@ export function openStore(path) {
       catch (e) { db.exec('ROLLBACK'); throw e; }
       return id;
     },
-    history: room => all('SELECT * FROM (SELECT seq,author,name,content,created FROM messages WHERE room=? ORDER BY seq DESC LIMIT 80) ORDER BY seq', room),
-    addMessage: (room, author, name, content) => run('INSERT INTO messages(room,author,name,content,created) VALUES(?,?,?,?,?)', room, author, name, content, Date.now()),
+    history: room => history(room),
+    generationHistory: room => history(room,true),
+    addImage: image => run('INSERT INTO images(id,room,uploader,filename,alt,mime,size,width,height,storage_path,created) VALUES(?,?,?,?,?,?,?,?,?,?,?)', image.id,image.room,image.uploader,image.filename,image.alt,image.mime,image.size,image.width,image.height,image.path,Date.now()),
+    addMessage(room, author, name, content, imageIds = []) {
+      db.exec('BEGIN IMMEDIATE');
+      try {
+        if (imageIds.length > 4 || new Set(imageIds).size !== imageIds.length) throw Object.assign(new Error('Attach up to four distinct images.'),{status:400});
+        const images = imageIds.map(id => get('SELECT * FROM images WHERE id=? AND room=? AND uploader=? AND attached=0 AND created>?',id,room,author,Date.now()-3600_000));
+        if (images.some(image=>!image)) throw Object.assign(new Error('One of those images is unavailable or already attached.'),{status:400});
+        if (images.reduce((sum,image)=>sum+image.size,0)>16*1024*1024) throw Object.assign(new Error('Attached images may total up to 16 MiB.'),{status:413});
+        const result=run('INSERT INTO messages(room,author,name,content,created) VALUES(?,?,?,?,?)',room,author,name,content,Date.now());
+        images.forEach((image,index)=>{run('INSERT INTO message_images VALUES(?,?,?)',result.lastInsertRowid,image.id,index);run('UPDATE images SET attached=1 WHERE id=?',image.id);}); db.exec('COMMIT'); return result;
+      } catch(error) { db.exec('ROLLBACK'); throw error; }
+    },
     redeem(invite, user) {
       db.exec('BEGIN IMMEDIATE');
       try {

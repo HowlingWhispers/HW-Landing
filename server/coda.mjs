@@ -4,9 +4,12 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openStore, token, hash } from './store.mjs';
 import { askKilo } from './kilo.mjs';
+import { IMAGE_COUNT_LIMIT, normalizeImage, readImageBody, readStoredImage, removeStoredImage } from './image-files.mjs';
 
 export function createCodaServer(config, store, generate = askKilo, fetchImpl = fetch) {
   const busy = new Set(); const rates = new Map();
+  const headerText = value => { try { return decodeURIComponent(String(value || '')); } catch { return String(value || ''); } };
+  const purgeExpiredImages = () => { const expired=store.all('SELECT id,storage_path FROM images WHERE attached=0 AND created<?',Date.now()-3600_000);expired.forEach(image=>{store.run('DELETE FROM images WHERE id=?',image.id);removeStoredImage(image.storage_path);}); };
   const cookieName = 'hw_coda';
   const secure = config.origin.startsWith('https:');
   const cookie = (name, value, seconds) => `${name}=${value}; Path=/coda; HttpOnly; SameSite=Lax; Max-Age=${seconds}${secure ? '; Secure' : ''}`;
@@ -57,10 +60,18 @@ export function createCodaServer(config, store, generate = askKilo, fetchImpl = 
         return redirect('/coda', [cookie(cookieName, session, 7*86400), cookie('hw_coda_state', '', 0)]);
       }
       const session = cookies[cookieName] && store.get('SELECT u.id,u.name FROM sessions s JOIN users u ON u.id=s.user WHERE s.token=? AND s.expires>?', hash(cookies[cookieName]), Date.now());
-      if (path === '/coda/api/me' && req.method === 'GET') return send(200, { user: session || null, configured: Boolean(config.clientId && config.clientSecret), providerReady: Boolean(config.kiloPassword) });
+      if (path === '/coda/api/me' && req.method === 'GET') return send(200, { user: session || null, configured: Boolean(config.clientId && config.clientSecret), providerReady: Boolean(config.kiloPassword && config.orbisSecret) });
       if (!session) fail(401, 'Sign in with Discord to enter your den.');
       limit(session.id + ':requests', 120);
       if (path === '/coda/api/logout' && req.method === 'POST') { store.run('DELETE FROM sessions WHERE token=?', hash(cookies[cookieName])); res.setHeader('Set-Cookie', cookie(cookieName, '', 0)); return send(200, { ok: true }); }
+      if (path === '/coda/api/memory' && req.method === 'GET') {
+        const response = await fetchImpl(`${config.orbisMemoryUrl}/view?discordUserId=${encodeURIComponent(session.id)}&scope=dm`, { headers:{Authorization:`Bearer ${config.orbisSecret}`},signal:AbortSignal.timeout(15_000) });
+        if (response.status===409) return send(200,{linked:false,profile:null,notes:[],audit:[]}); const data=await response.json(); if(!response.ok)fail(502,data.error||'Coda memory is unavailable.'); return send(200,{...data,linked:true});
+      }
+      if (path.startsWith('/coda/api/memory/') && req.method === 'POST') {
+        const operation=path.slice('/coda/api/memory/'.length); const routes={profile:'profile',notes:'notes',correct:'notes/correct',visibility:'notes/visibility',forget:'notes/forget'}; if(!routes[operation])fail(404,'That memory action is not available.');
+        const data=await body(req); delete data.discordUserId; if(operation==='notes'){data.kind='memory';data.provenance='member_stated';data.visibility=data.visibility||'private';} const response=await fetchImpl(`${config.orbisMemoryUrl}/${routes[operation]}`,{method:'POST',headers:{Authorization:`Bearer ${config.orbisSecret}`,'Content-Type':'application/json'},body:JSON.stringify({discordUserId:session.id,...data}),signal:AbortSignal.timeout(15_000)}); const result=await response.json(); if(!response.ok)fail(response.status<500?response.status:502,result.error||'Coda memory is unavailable.'); return send(200,result);
+      }
       if (path === '/coda/api/rooms' && req.method === 'GET') return send(200, { rooms: store.all('SELECT r.* FROM rooms r JOIN members m ON m.room=r.id WHERE m.user=? ORDER BY r.created DESC', session.id) });
       if (path === '/coda/api/rooms' && req.method === 'POST') {
         const data = await body(req); const title = String(data.title || '').trim().slice(0,80);
@@ -72,7 +83,13 @@ export function createCodaServer(config, store, generate = askKilo, fetchImpl = 
         limit(session.id + ':join', 10); const data = await body(req);
         try { return send(200, { id: store.redeem(String(data.token || ''), session.id) }); } catch(e) { fail(400,e.message); }
       }
-      const match = path.match(/^\/coda\/api\/rooms\/([a-f0-9-]+)(?:\/(messages|invite|reply|members))?$/);
+      const imageMatch=path.match(/^\/coda\/api\/rooms\/([a-f0-9-]+)\/images(?:\/([a-f0-9-]+))?$/);
+      if(imageMatch){const [,roomId,imageId]=imageMatch;if(!store.member(roomId,session.id))fail(404,'That image could not be found.');
+        if(req.method==='POST'&&!imageId){limit(session.id+':images',10);purgeExpiredImages();if(!['image/png','image/jpeg','image/webp'].includes(String(req.headers['content-type']||'').split(';')[0]))fail(400,'Use a PNG, JPEG, or WebP image.');const image=await normalizeImage(await readImageBody(req),config.imageRoot,roomId,headerText(req.headers['x-coda-filename']));if(store.get('SELECT COALESCE(SUM(size),0) AS n FROM images WHERE room=?',roomId).n+image.size>200*1024*1024){removeStoredImage(image.path);fail(413,'This room has reached its 200 MiB image limit.');}const alt=headerText(req.headers['x-coda-alt']).trim().slice(0,500);store.addImage({...image,alt,room:roomId,uploader:session.id});return send(201,{image:{id:image.id,filename:image.filename,alt,mime:image.mime,size:image.size,width:image.width,height:image.height,url:`/coda/api/rooms/${roomId}/images/${image.id}`}});}
+        const image=store.get('SELECT * FROM images WHERE id=? AND room=?',imageId,roomId);if(!image||(req.method==='GET'&&!image.attached)||(req.method==='DELETE'&&(image.attached||image.uploader!==session.id)))fail(404,'That image could not be found.');
+        if(req.method==='GET'){const bytes=readStoredImage(image.storage_path);res.writeHead(200,{'Content-Type':image.mime,'Content-Length':bytes.length,'Content-Disposition':`inline; filename*=UTF-8''${encodeURIComponent(image.filename)}`,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; sandbox",'Referrer-Policy':'no-referrer'});return res.end(bytes);}
+        if(req.method==='DELETE'){store.run('DELETE FROM images WHERE id=?',image.id);removeStoredImage(image.storage_path);return send(200,{ok:true});}fail(405,'That image action is not available.');}
+      const match = path.match(/^\/coda\/api\/rooms\/([a-f0-9-]+)(?:\/(messages|invite|reply|members|clear))?$/);
       if (!match) fail(404, 'That page could not be found.');
       const [, id, action] = match;
       if (!store.member(id, session.id)) fail(404, 'That room could not be found.');
@@ -89,7 +106,7 @@ export function createCodaServer(config, store, generate = askKilo, fetchImpl = 
         if (data.mode !== undefined) store.run('UPDATE rooms SET mode=? WHERE id=?',data.mode,id);
         return send(200,{ok:true});
       }
-      if (!action && req.method === 'DELETE') { owner(); if (busy.has(id)) fail(409,'Wait for Coda to finish before deleting this room.'); store.run('DELETE FROM rooms WHERE id=?',id); return send(200,{ok:true}); }
+      if (!action && req.method === 'DELETE') { owner(); if (busy.has(id)) fail(409,'Wait for Coda to finish before deleting this room.'); const paths=store.all('SELECT storage_path FROM images WHERE room=?',id);store.run('DELETE FROM rooms WHERE id=?',id);paths.forEach(image=>removeStoredImage(image.storage_path));return send(200,{ok:true}); }
       if (action === 'members' && req.method === 'DELETE') {
         const data = await body(req); const target = String(data.userId || '');
         // Anyone may remove themselves; removing a fellow member stays host-only.
@@ -103,18 +120,21 @@ export function createCodaServer(config, store, generate = askKilo, fetchImpl = 
         return send(200,{url:config.origin+'/coda#invite='+invite});
       }
       if (action === 'invite' && req.method === 'DELETE') { owner(); store.run('DELETE FROM invites WHERE room=?',id); return send(200,{ok:true}); }
+      if (action === 'clear' && req.method === 'DELETE') { owner(); if(busy.has(id))fail(409,'Wait for Coda to finish before clearing this room.');if(store.get('SELECT COUNT(*) AS n FROM members WHERE room=?',id).n>1)fail(409,'Remove invited members or start a new room before clearing shared history.');const paths=store.all('SELECT storage_path FROM images WHERE room=?',id);store.run('DELETE FROM images WHERE room=?',id);store.run('DELETE FROM messages WHERE room=?',id);paths.forEach(image=>removeStoredImage(image.storage_path));return send(200,{ok:true}); }
       if (action === 'messages' && req.method === 'POST') {
-        limit(session.id + ':messages', 20); const data = await body(req); const text = typeof data.text === 'string' ? data.text.trim() : '';
-        if (!text || text.length > 8000) fail(400,'Write a message of up to 8,000 characters.');
-        store.addMessage(id,session.id,session.name,text); return send(201,{ok:true});
+        limit(session.id + ':messages', 20); const data = await body(req); const text = typeof data.text === 'string' ? data.text.trim() : ''; const imageIds=Array.isArray(data.imageIds)?data.imageIds.map(String):[];
+        if ((!text&&!imageIds.length) || text.length > 8000 || imageIds.length>IMAGE_COUNT_LIMIT) fail(400,'Write a message of up to 8,000 characters and attach up to four images.');
+        if (/^\/(?:help|memory|format|clear)(?:\s|$)/i.test(text)) fail(400,'Browser Coda commands are private controls and cannot be stored as room messages.');
+        store.addMessage(id,session.id,session.name,text,imageIds); return send(201,{ok:true});
       }
       if (action === 'reply' && req.method === 'POST') {
         limit(session.id + ':generation', 6); if (busy.has(id)) fail(409,'Coda is already answering this room.');
-        const history = store.history(id);
+        const history = store.generationHistory(id);
         if (!history.length || history.at(-1).author === 'coda') fail(409,'Send a new message before asking Coda again.');
         busy.add(id);
         try {
-          const reply = await generate(config,id,history);
+          const memberCount = store.get('SELECT COUNT(*) AS n FROM members WHERE room=?',id).n;
+          const reply = await generate(config,id,history,{ discordUserId: session.id, speakerName: session.name, privacyScope: memberCount === 1 ? 'dm' : 'guild' });
           // A participant removed during generation must not receive room content.
           store.addMessage(id,'coda','Coda',reply);
           if (!store.member(id,session.id)) fail(404,'That room could not be found.');
@@ -122,7 +142,7 @@ export function createCodaServer(config, store, generate = askKilo, fetchImpl = 
         } finally { busy.delete(id); }
       }
       fail(405,'That action is not available.');
-    } catch(e) { send(e.status || 502, { error: e.status ? e.message : 'Coda could not connect right now. Your messages are saved; try Ask Coda again.' }); }
+    } catch(e) { if(!e.status)console.error('[coda-web] request failed',{method:req.method,path:req.url,message:e.message});send(e.status || 502, { error: e.status ? e.message : 'Coda could not connect right now. Your messages are saved; try Ask Coda again.' }); }
   });
   server.requestTimeout = 120_000;
   return server;
@@ -132,7 +152,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   if (new URL(origin).origin !== origin) throw new Error('CODA_WEB_ORIGIN must be an origin without a trailing slash');
   const path = env.CODA_WEB_DB || '/var/lib/hw-coda-web/rooms.sqlite'; mkdirSync(dirname(path),{recursive:true,mode:0o700});
   const store = openStore(path);
-  const config = { origin, clientId: env.DISCORD_BOT_CLIENT_ID || env.DISCORD_CLIENT_ID, clientSecret: env.DISCORD_CLIENT_SECRET, kiloUrl: env.CODA_KILO_BASE_URL || 'http://127.0.0.1:4096', kiloUsername: env.KILO_SERVER_USERNAME || 'kilo', kiloPassword: env.KILO_SERVER_PASSWORD, kiloModel: env.CODA_KILO_MODEL || 'kilo/kilo-auto/free' };
+  const config = { origin, clientId: env.DISCORD_BOT_CLIENT_ID || env.DISCORD_CLIENT_ID, clientSecret: env.DISCORD_CLIENT_SECRET, kiloUrl: env.CODA_KILO_BASE_URL || 'http://127.0.0.1:4096', kiloUsername: env.KILO_SERVER_USERNAME || 'kilo', kiloPassword: env.KILO_SERVER_PASSWORD, kiloModel: env.CODA_KILO_MODEL || 'kilo/kilo-auto/free', kiloVisionModel: env.CODA_KILO_VISION_MODEL || env.CODA_KILO_MODEL || 'kilo/kilo-auto/free', orbisUrl: env.CODA_ORBIS_BRIDGE_URL || 'http://127.0.0.1:8789/api/internal/coda-discord', orbisMemoryUrl: env.CODA_ORBIS_MEMORY_URL || 'http://127.0.0.1:8789/api/internal/coda-memory', orbisSecret: env.CODA_ORBIS_BRIDGE_SECRET, imageRoot: env.CODA_WEB_IMAGE_DIR || '/var/lib/hw-coda-web/images' };
   const server = createCodaServer(config,store);
   server.listen(Number(env.CODA_WEB_PORT || 3218),'127.0.0.1',()=>console.log('Coda Web listening on loopback'));
   for (const signal of ['SIGINT','SIGTERM']) process.on(signal,()=>server.close(()=>{store.db.close();process.exit(0);}));
