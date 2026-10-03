@@ -647,96 +647,61 @@ function Creations() {
     </section>
   );
 }
-const stages = [
-  {
-    name: "Orbis",
-    icon: BookOpen,
-    title: "Build the foundations.",
-    text: "The canonical library holds authored worlds, assets, relationships, ownership and revisions.",
-    status: "Experimental",
-  },
-  {
-    name: "Speculus",
-    icon: Terminal,
-    title: "Step into the story.",
-    text: "The simulator launches from Orbis and assembles the scene, persona and relevant world context for roleplay.",
-    status: "V3 · Experimental",
-  },
-  {
-    name: "Fabula",
-    icon: Layers3,
-    title: "Make consequences matter.",
-    text: "The pre-alpha runtime establishes private world sessions, canonical NPC presence and reviewed player contributions.",
-    status: "Pre-alpha",
-  },
-  {
-    name: "Studium",
-    icon: Search,
-    title: "Learn from what happened.",
-    text: "The research backend studies sanitized history and prepares proposals. Authors decide what becomes canon.",
-    status: "In development",
-  },
-];
-function Ecosystem() {
-  const [selected, setSelected] = useState(0);
-  const s = stages[selected];
+function Experiments() {
   return (
     <section className="section shell page-section">
-      <p className="eyebrow">TRY AN EXPERIMENT / EXPLORE THE CONNECTIONS</p>
+      <p className="eyebrow">CODA’S EXPERIMENT SHELF</p>
       <h1>
-        Stories happen.
+        Try something curious.
         <br />
-        <em>Worlds keep growing.</em>
+        <em>See what happens.</em>
       </h1>
       <p className="page-intro">
-        Separate systems, connected by a shared idea: build a world, explore it,
-        and learn from the stories it produces.
+        Small experiences, prototypes and ideas we’re testing. Step inside,
+        explore, and tell us what you discover.
       </p>
-      <div className="experiment-links">
-        <Link
-          href="https://praxis.thehowlingwhispers.com/"
-          className="button primary"
-        >
-          Try Praxis
-        </Link>
-        <Link
-          href="https://thehowlingwhispers.com/vesper"
-          className="button secondary"
-        >
-          Explore Bellflame
-        </Link>
+      <div className="creation-grid">
+        <article className="creation-feature blue">
+          <PawPrint size={35} />
+          <span className="eyebrow">CONVERSATION / SHARED ROOMS</span>
+          <h2>Coda’s Den</h2>
+          <p>
+            A dedicated space to talk with Coda. Create a conversation, invite a
+            friend, and explore what a shared AI chatroom can become.
+          </p>
+          <p>
+            Discord sign-in required. Conversations are restricted to room
+            members.
+          </p>
+          <a href="/coda" className="button primary">
+            Enter Coda’s Den <ArrowUpRight size={18} />
+          </a>
+        </article>
+        <article className="creation-feature">
+          <FlaskConical size={35} />
+          <span className="eyebrow">NARRATIVE / RESOLVED OUTCOMES</span>
+          <h2>Vesper Hollow: Bellflame</h2>
+          <p>
+            A cold valley, a living flame, and a roll decided before anyone
+            narrated it. A proof of concept for stories built around resolved
+            outcomes.
+          </p>
+          <a href="/vesper" className="button secondary">
+            Explore Bellflame <ArrowUpRight size={18} />
+          </a>
+        </article>
       </div>
-      <div className="ecosystem-tabs">
-        {stages.map((s, i) => (
-          <button
-            key={s.name}
-            aria-pressed={selected === i}
-            onClick={() => setSelected(i)}
-          >
-            <s.icon size={24} />
-            <span>0{i + 1}</span>
-            <strong>{s.name}</strong>
-          </button>
-        ))}
-      </div>
-      <article className="ecosystem-detail" aria-live="polite">
-        <span className="eyebrow">
-          {s.name} / {s.status}
-        </span>
-        <h2>{s.title}</h2>
-        <p>{s.text}</p>
-        <Link href={`${GITHUB}/HW-${s.name}`} className="text-link">
-          Explore this project
-        </Link>
-      </article>
       <div className="notice">
-        <FlaskConical size={25} />
+        <Wrench size={25} />
         <p>
-          <strong>The full cycle is still being built.</strong> Studium
-          proposals require human review before entering Orbis canon. Praxis is
-          a separate story experiment; Mouseion remains a planned creation
-          layer.
+          <strong>These ideas are still taking shape.</strong> Share feedback,
+          unexpected behavior or your next experiment with the community.
         </p>
+      </div>
+      <div className="actions">
+        <Link href={DISCORD} className="button secondary">
+          Discuss an experiment
+        </Link>
       </div>
     </section>
   );
@@ -920,7 +885,7 @@ export function App() {
         ) : page === "creations" ? (
           <Creations />
         ) : page === "experiment" ? (
-          <Ecosystem />
+          <Experiments />
         ) : page === "community" ? (
           <Community />
         ) : (

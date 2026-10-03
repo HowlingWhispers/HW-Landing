@@ -9,8 +9,8 @@ creative work, prototypes and community. Existing hash aliases still work.
 - Documentation tab: nine reviewed public document snapshots, full-text search,
   project filters, deep-linked Markdown reader, source links and capture dates.
 - Creations tab: official music channel and Vesper Hollow: Bellflame entry.
-- Experiments: direct entry points to Praxis and Bellflame, alongside the
-  world-development ecosystem explanation.
+- Experiments: Coda’s Den and Bellflame, with direct entry points and clear
+  descriptions of what each experiment explores. Core projects remain in Projects.
 - Homepage features different project areas and architecture reading selections.
 - Snow-white, ice-blue and cyan theme, optional dark theme and original Coda art.
 
@@ -23,8 +23,9 @@ relative links resolve against the original GitHub document. HTML is skipped,
 remote images are omitted and unsupported URL schemes are refused.
 
 Private repositories have descriptive entries without private document imports
-or inaccessible source links. Coda's Den `/coda` remains a private-link entry;
-its route, music, room permissions, backend and UI source are unchanged.
+or inaccessible source links. Coda’s Den `/coda` is now discoverable from
+Experiments at the owner’s request. Its route, music, room permissions, backend
+and UI source are unchanged.
 
 ## Artwork
 
