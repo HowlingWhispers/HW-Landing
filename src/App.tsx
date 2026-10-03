@@ -315,14 +315,19 @@ function Home() {
         <div className="hero-copy">
           <p className="eyebrow">WELCOME TO HOWLING WHISPERS</p>
           <h1>
-            A little curiosity.
+            Build worlds.
             <br />
-            <em>A whole lot of possibility.</em>
+            Bring characters to life.
+            <br />
+            <em>Play their stories.</em>
           </h1>
           <p className="hero-description">
-            Software, stories, music, worlds.
-            <br />
-            Come find the strange thing we’re building next.
+            Howling Whispers is an independent collection of tools for
+            AI-powered roleplay, worldbuilding, and interactive storytelling.
+          </p>
+          <p className="hero-goal">
+            We’re building toward RPG experiences where your actions have
+            lasting consequences.
           </p>
           <div className="actions">
             <a href="#projects" className="button primary">
@@ -361,6 +366,56 @@ function Home() {
           <strong>One</strong> curious community
         </span>
       </div>
+      <section className="section shell purpose-section">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">THE ROLEPLAY & RPG DIRECTION</p>
+            <h2>From a world to a playable story.</h2>
+          </div>
+        </div>
+        <div className="destination-grid">
+          <article className="destination">
+            <BookOpen size={29} />
+            <span className="eyebrow">CREATE / ORBIS</span>
+            <h3>Build the world.</h3>
+            <p>
+              Orbis holds the world you create: its characters, places, lore and
+              connections.
+            </p>
+            <Link href={ORBIS} className="text-link">
+              Explore Orbis <ArrowUpRight size={17} />
+            </Link>
+          </article>
+          <article className="destination">
+            <Terminal size={29} />
+            <span className="eyebrow">ROLEPLAY / SPECULUS</span>
+            <h3>Bring it to life.</h3>
+            <p>
+              Speculus lets you roleplay within that world. Choose an asset in
+              Orbis and use Simulate to start a scene.
+            </p>
+            <Link href={ORBIS} className="text-link">
+              Start through Orbis <ArrowUpRight size={17} />
+            </Link>
+          </article>
+          <article className="destination">
+            <Layers3 size={29} />
+            <span className="eyebrow">IN DEVELOPMENT / FABULA</span>
+            <h3>Make actions matter.</h3>
+            <p>
+              Fabula is developing the gameplay systems behind persistent
+              adventures, with recorded state and lasting consequences.
+            </p>
+            <a href="#documentation/fabula-2" className="text-link">
+              Read about Fabula <ArrowUpRight size={17} />
+            </a>
+          </article>
+        </div>
+        <p className="purpose-note">
+          This is a direction we’re building toward. Howling Whispers also
+          houses separate projects, music, creative work and experiments.
+        </p>
+      </section>
       <section className="section shell">
         <div className="section-heading">
           <div>

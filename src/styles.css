@@ -1377,3 +1377,24 @@ em {
   outline: 2px solid var(--accent);
   outline-offset: 4px;
 }
+.coda-hero h1 {
+  font-size: clamp(2.5rem, 3.5vw, 3.35rem);
+}
+.hero-goal {
+  margin-top: 16px;
+  color: var(--muted);
+  line-height: 1.65;
+  font-size: 0.95rem;
+  max-width: 490px;
+}
+.purpose-note {
+  color: var(--muted);
+  margin-top: 24px;
+  font-size: 0.95rem;
+  max-width: 800px;
+}
+@media (max-width: 700px) {
+  .coda-hero h1 {
+    font-size: clamp(2.1rem, 8.5vw, 3rem);
+  }
+}
