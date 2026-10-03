@@ -10,7 +10,7 @@
     "lint": "tsc -b --pretty false",
     "coda:start": "node --env-file=.env.coda server/coda.mjs",
     "test:coda": "node --test tests/*.test.mjs",
-    "test:ui": "vitest run src/CodaMessageContent.test.tsx"
+    "test:ui": "vitest run src/*.test.tsx"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

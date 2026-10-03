@@ -22,22 +22,55 @@ export function createMusicLayer({ config, store, fetchImpl = fetch, providers }
   const refreshing = new Map();
 
   const provider = id => adapters.get(id) || null;
-  const configured = () => [...adapters.values()].filter(adapter => {
-    try { return adapter.configured(config); } catch { return false; }
-  });
-  const providerIds = () => configured().map(adapter => adapter.id);
+  // Credential resolution, per account with a deployment fallback:
+  //   1. the account's own stored app credentials (secret sealed at rest)
+  //   2. the adapter's environment defaults
+  // The redirect URI stays deployment-level either way, because the provider
+  // matches it byte for byte against one registered callback path.
+  function resolveCredentials(user, providerId) {
+    const adapter = adapters.get(providerId);
+    const fallback = typeof adapter?.envCredentials === 'function' ? adapter.envCredentials(config) : {};
+    const row = user ? store.musicProviderConfig(user, providerId) : null;
+    if (!row) return { ...fallback, source: fallback.clientId ? 'deployment' : 'none' };
+    return {
+      clientId: row.client_id,
+      clientSecret: open(config, row.client_secret_sealed),
+      redirectUri: row.redirect_uri || fallback.redirectUri || null,
+      source: 'account',
+    };
+  }
 
-  // The adapter's registered redirect URI wins; otherwise derive one from the
-  // origin, because Spotify rejects any mismatch byte for byte.
-  const redirectFor = id => {
-    const adapter = adapters.get(id);
-    if (!adapter) throw Object.assign(new Error('That music provider is not available.'), { status: 404 });
-    const fallback = `${config.origin}/coda/api/music/${id}/callback`;
-    return typeof adapter.redirectUri === 'function' ? adapter.redirectUri(config, fallback) : fallback;
+  // The adapter is reachable when either its env defaults exist or this account
+  // has stored its own app. Callers must pass the resolved credentials through.
+  function ready(user, providerId) {
+    const adapter = adapters.get(providerId);
+    if (!adapter) return false;
+    if (adapter.configured(config)) return true;
+    const credentials = resolveCredentials(user, providerId);
+    return Boolean(credentials.clientId && credentials.clientSecret && credentials.redirectUri);
+  }
+
+  const adapterFor = user => {
+    const list = [...adapters.values()].filter(adapter => {
+      try { return ready(user, adapter.id); } catch { return false; }
+    });
+    return {
+      list: list.map(adapter => ({ id: adapter.id, label: adapter.label, scopes: adapter.scopes, configured: true })),
+      ids: list.map(adapter => adapter.id),
+    };
   };
 
-  function publicView(adapter) {
-    return { id: adapter.id, label: adapter.label, scopes: adapter.scopes, configured: true };
+  const providerIds = user => adapterFor(user).ids;
+
+  // A stored redirect URI wins, then the deployment default, then one derived
+  // from the origin, because the provider matches it byte for byte.
+  const redirectFor = (id, credentials = {}) => {
+    if (!adapters.has(id)) throw Object.assign(new Error('That music provider is not available.'), { status: 404 });
+    return credentials?.redirectUri || `${config.origin}/coda/api/music/${id}/callback`;
+  };
+
+  function publicView(adapter, user) {
+    return { id: adapter.id, label: adapter.label, scopes: adapter.scopes, configured: ready(user, adapter.id) };
   }
 
   // Sealed material never leaves this module; callers get a descriptor only.
@@ -106,7 +139,7 @@ export function createMusicLayer({ config, store, fetchImpl = fetch, providers }
     if (existing) return existing;
     const attempt = (async () => {
       try {
-        const refreshed = await adapter.refresh({ connection: row, config, fetchImpl });
+        const refreshed = await adapter.refresh({ connection: row, credentials: resolveCredentials(user, providerId), fetchImpl });
         persist(user, providerId, { ...refreshed, authorizedAt: row.authorizedAt });
         return { adapter, connection: connection(user, providerId) };
       } catch (error) {
@@ -124,17 +157,20 @@ export function createMusicLayer({ config, store, fetchImpl = fetch, providers }
   }
 
   return {
-    providers: () => configured().map(publicView),
+    providers: user => adapterFor(user).list,
+    settingsProviders: user => [...adapters.values()].map(adapter => publicView(adapter, user)),
     providerIds,
+    resolveCredentials,
     provider,
 
     async startConnect(user, providerId) {
       const adapter = provider(providerId);
-      if (!adapter || !adapter.configured(config)) throw Object.assign(new Error('That music provider is not available.'), { status: 404 });
+      if (!adapter || !ready(user, providerId)) throw Object.assign(new Error('That music service is not set up yet.'), { status: 404 });
+      const credentials = resolveCredentials(user, providerId);
       const state = randomBytes(32).toString('base64url');
       store.run('DELETE FROM music_oauth WHERE expires<?', Date.now());
       store.run('INSERT INTO music_oauth(token,provider,user,expires) VALUES(?,?,?,?)', hash(state), providerId, user, Date.now() + 600_000);
-      return { state, url: adapter.authorizeUrl({ state, redirectUri: redirectFor(providerId), config }) };
+      return { state, url: adapter.authorizeUrl({ state, redirectUri: redirectFor(providerId, credentials), credentials }) };
     },
 
     async completeConnect({ state, code, sessionUser, cookieState }) {
@@ -147,7 +183,8 @@ export function createMusicLayer({ config, store, fetchImpl = fetch, providers }
       const adapter = provider(row.provider);
       if (!adapter) throw Object.assign(new Error('That music provider is not available.'), { status: 404 });
       try {
-        const record = await adapter.exchange({ code, redirectUri: redirectFor(row.provider), config, fetchImpl });
+        const credentials = resolveCredentials(row.user, row.provider);
+        const record = await adapter.exchange({ code, redirectUri: redirectFor(row.provider, credentials), credentials, fetchImpl });
         persist(row.user, row.provider, record);
         return { provider: row.provider, scopes: record.scopes };
       } catch (error) {
@@ -156,6 +193,8 @@ export function createMusicLayer({ config, store, fetchImpl = fetch, providers }
     },
 
     connection,
+    // Used by the dispatch layer to act on one specific member's own account.
+    freshConnection,
     descriptor: (user, providerId) => descriptor(store.get('SELECT * FROM music_connections WHERE user=? AND provider=?', user, providerId)),
 
     // Local disconnect only: sealed tokens and opt-ins go, control stops
@@ -163,21 +202,56 @@ export function createMusicLayer({ config, store, fetchImpl = fetch, providers }
     async disconnect(user, providerId) {
       const adapter = provider(providerId);
       if (!adapter) throw Object.assign(new Error('That music provider is not available.'), { status: 404 });
-      const result = await adapter.disconnect({ connection: connection(user, providerId), config, fetchImpl });
+      const result = await adapter.disconnect({ connection: connection(user, providerId), fetchImpl });
       store.removeMusicConnection(user, providerId);
       return { ok: true, remoteRevoked: result.remoteRevoked === true, guidance: result.guidance || null };
     },
 
     async devices(room, user, providerId) {
       const { adapter, connection: row } = await freshConnection(user, providerId);
-      const devices = await adapter.devices({ connection: row, config, fetchImpl });
+      const devices = await adapter.devices({ connection: row, credentials: resolveCredentials(user, providerId), fetchImpl });
       const hint = store.get('SELECT device_hint FROM music_optin WHERE room=? AND user=? AND provider=?', room, user, providerId);
       return { devices, selection: selectDevice(devices, hint?.device_hint) };
     },
 
     async resolveTrack(user, providerId, query) {
       const { adapter, connection: row } = await freshConnection(user, providerId);
-      return adapter.resolveTrack({ query, connection: row, config, fetchImpl });
+      return adapter.resolveTrack({ query, connection: row, credentials: resolveCredentials(user, providerId), fetchImpl });
+    },
+
+    // App credentials for this account only. Write-only: the secret is sealed
+    // here and is never returned, so the UI can only report whether one is set.
+    // The deployment-wide token key is deliberately not reachable from here.
+    setCredentials(user, providerId, { clientId, clientSecret, redirectUri }) {
+      const adapter = provider(providerId);
+      if (!adapter || typeof adapter.validateCredentials !== 'function') throw Object.assign(new Error('That music service is not available.'), { status: 404 });
+      const invalid = adapter.validateCredentials({ clientId, clientSecret });
+      if (invalid) throw Object.assign(new Error(invalid), { status: 400 });
+      const sealed = seal(config, String(clientSecret).trim());
+      if (!sealed) throw Object.assign(new Error('Music token storage is not configured yet.'), { status: 503 });
+      store.saveMusicProviderConfig({ user, provider: providerId, clientId: String(clientId).trim(), clientSecretSealed: sealed, redirectUri: redirectUri ? String(redirectUri).slice(0, 300) : null });
+      return { ok: true, configured: true };
+    },
+
+    // Never exposes the secret, only whether one is stored and where it came from.
+    credentialsStatus(user, providerId) {
+      const adapter = provider(providerId);
+      if (!adapter) throw Object.assign(new Error('That music service is not available.'), { status: 404 });
+      const credentials = resolveCredentials(user, providerId);
+      return {
+        provider: providerId,
+        label: adapter.label,
+        configured: ready(user, providerId),
+        source: credentials.source,
+        clientId: credentials.clientId || null,
+        redirectUri: redirectFor(providerId, credentials),
+        scopes: adapter.scopes,
+      };
+    },
+
+    clearCredentials(user, providerId) {
+      store.clearMusicProviderConfig(user, providerId);
+      return { ok: true };
     },
 
     optIn(room, user, providerId, deviceId = null) {
@@ -209,10 +283,11 @@ export function createMusicLayer({ config, store, fetchImpl = fetch, providers }
 
     // Neutral prompt state: no provider names, no tokens, no ids beyond labels.
     promptState(room, user) {
-      const available = configured().map(adapter => ({ id: adapter.id, label: adapter.label }));
-      const listeners = available.length ? this.connectedUsers(room, available[0].id).length : 0;
-      const own = available.length ? descriptor(store.get('SELECT * FROM music_connections WHERE user=? AND provider=?', user, available[0].id)) : { provider: null };
-      const optedIn = available.length ? Boolean(store.get('SELECT 1 FROM music_optin WHERE room=? AND user=? AND provider=?', room, user, available[0].id)) : false;
+      const available = adapterFor(user).list;
+      const primary = available[0]?.id || null;
+      const listeners = primary ? this.connectedUsers(room, primary).length : 0;
+      const own = primary ? descriptor(store.get('SELECT * FROM music_connections WHERE user=? AND provider=?', user, primary)) : { provider: null };
+      const optedIn = primary ? Boolean(store.get('SELECT 1 FROM music_optin WHERE room=? AND user=? AND provider=?', room, user, primary)) : false;
       return { available, listeners, requester: { connected: own.connected === true, status: own.status || null, optedIn } };
     },
   };

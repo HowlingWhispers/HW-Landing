@@ -6,12 +6,14 @@ import { openStore, token, hash } from './store.mjs';
 import { askKilo } from './kilo.mjs';
 import { IMAGE_COUNT_LIMIT, normalizeImage, readImageBody, readStoredImage, removeStoredImage } from './image-files.mjs';
 import { createMusicLayer } from './music/index.mjs';
+import { createMusicSession } from './music/session.mjs';
 
 export function createCodaServer(config, store, generate = askKilo, fetchImpl = fetch, musicProviders) {
   const busy = new Set(); const rates = new Map();
   // The music layer is provider-agnostic; coda.mjs never names a provider.
   // musicProviders is a test/dev seam: omit it and the registry is derived from config.
   const music = createMusicLayer({ config, store, fetchImpl, providers: musicProviders });
+  const musicSession = createMusicSession({ music, store, config, fetchImpl });
   const headerText = value => { try { return decodeURIComponent(String(value || '')); } catch { return String(value || ''); } };
   const purgeExpiredImages = () => { const expired=store.all('SELECT id,storage_path FROM images WHERE attached=0 AND created<?',Date.now()-3600_000);expired.forEach(image=>{store.run('DELETE FROM images WHERE id=?',image.id);removeStoredImage(image.storage_path);}); };
   const cookieName = 'hw_coda';
@@ -70,8 +72,24 @@ export function createCodaServer(config, store, generate = askKilo, fetchImpl = 
       limit(session.id + ':requests', 120);
       if (path === '/coda/api/logout' && req.method === 'POST') { store.run('DELETE FROM sessions WHERE token=?', hash(cookies[cookieName])); res.setHeader('Set-Cookie', cookie(cookieName, '', 0)); return send(200, { ok: true }); }
       if (path === '/coda/api/music' && req.method === 'GET') {
-        const providers = music.providers();
-        return send(200, { providers, connections: providers.map(entry => ({ ...music.descriptor(session.id, entry.id), label: entry.label })) });
+        // Settings list every registered adapter so an account can bootstrap its
+        // own app credentials; room playback still accepts only ready providers.
+        const providers = music.settingsProviders(session.id);
+        return send(200, { providers, connections: providers.map(entry => ({ ...music.descriptor(session.id, entry.id), label: entry.label })), credentials: providers.map(entry => music.credentialsStatus(session.id, entry.id)) });
+      }
+      // App credentials for the signed-in account. The secret is accepted, sealed,
+      // and never returned: a GET reports only whether one is stored.
+      const musicCredentials = path.match(/^\/coda\/api\/music\/([a-z0-9_-]+)\/credentials$/);
+      if (musicCredentials) {
+        const [, providerId] = musicCredentials;
+        if (!music.provider(providerId)) fail(404, 'That music service is not available.');
+        if (req.method === 'GET') return send(200, music.credentialsStatus(session.id, providerId));
+        if (req.method === 'PUT') {
+          limit(session.id + ':music-credentials', 10); const data = await body(req);
+          return send(200, music.setCredentials(session.id, providerId, { clientId: data.clientId, clientSecret: data.clientSecret, redirectUri: data.redirectUri }));
+        }
+        if (req.method === 'DELETE') return send(200, music.clearCredentials(session.id, providerId));
+        fail(405, 'That music action is not available.');
       }
       const musicRoute = path.match(/^\/coda\/api\/music\/([a-z0-9_-]+)\/(connect|callback|disconnect)$/);
       if (musicRoute) {
@@ -119,12 +137,12 @@ export function createCodaServer(config, store, generate = askKilo, fetchImpl = 
       if (roomMusic) {
         const [, roomId, musicAction] = roomMusic;
         if (!store.member(roomId, session.id)) fail(404, 'That room could not be found.');
-        const known = music.providerIds();
+        const known = music.providerIds(session.id);
         const providerId = url.searchParams.get('provider') || known[0];
-        if (!providerId || !known.includes(providerId)) fail(409, 'No music service is configured on this server yet.');
+        if (!providerId || !known.includes(providerId)) fail(409, 'No music service is set up for your account yet. Add its app details in Music settings.');
         if (!musicAction && req.method === 'GET') {
           const roster = music.roster(roomId, providerId);
-          return send(200, { provider: providerId, roster, listeners: music.connectedUsers(roomId, providerId).length, you: music.descriptor(session.id, providerId), optedIn: roster.some(entry => entry.user === session.id) });
+          return send(200, { provider: providerId, roster, listeners: music.connectedUsers(roomId, providerId).length, you: music.descriptor(session.id, providerId), optedIn: roster.some(entry => entry.user === session.id), session: musicSession.drift(roomId) });
         }
         if (musicAction === 'join' && req.method === 'POST') {
           limit(session.id + ':music', 20); const data = await body(req);
@@ -190,15 +208,26 @@ export function createCodaServer(config, store, generate = askKilo, fetchImpl = 
         try {
           const memberCount = store.get('SELECT COUNT(*) AS n FROM members WHERE room=?',id).n;
           const musicState = music.promptState(id, session.id);
-          const result = await generate(config,id,history,{ discordUserId: session.id, speakerName: session.name, privacyScope: memberCount === 1 ? 'dm' : 'guild' },fetchImpl,{ prompt: musicState, providerIds: music.providerIds() });
+          const result = await generate(config,id,history,{ discordUserId: session.id, speakerName: session.name, privacyScope: memberCount === 1 ? 'dm' : 'guild' },fetchImpl,{ prompt: musicState, providerIds: music.providerIds(session.id) });
           const reply = typeof result === 'string' ? result : result.text;
           const musicIntent = typeof result === 'string' ? null : result.musicIntent || null;
           // A participant removed during generation must not receive room content.
           store.addMessage(id,'coda','Coda',reply);
           if (!store.member(id,session.id)) fail(404,'That room could not be found.');
-          // Step 4 consumes this intent. Nothing is dispatched to a provider yet,
-          // and it is never written into the transcript.
-          return send(200,{ok:true,music:musicIntent});
+          // Music runs after the reply is safely stored and can never take it
+          // down: any failure becomes one short factual follow-up from Coda.
+          let musicOutcome = null;
+          if (musicIntent) {
+            const providerId = musicIntent.provider || music.providerIds(session.id)[0];
+            try {
+              musicOutcome = await musicSession.dispatch({ room: id, providerId, requester: session.id, action: musicIntent.action, query: musicIntent.query });
+            } catch (error) {
+              musicOutcome = { action: musicIntent.action, state: 'failed', message: error.message };
+              console.warn('[coda-web] music request did not complete', { roomId: id, action: musicIntent.action, reason: error.reason || 'failed' });
+            }
+            if (musicOutcome.message) store.addMessage(id,'coda','Coda',musicOutcome.message);
+          }
+          return send(200,{ok:true,music:musicOutcome});
         } finally { busy.delete(id); }
       }
       fail(405,'That action is not available.');

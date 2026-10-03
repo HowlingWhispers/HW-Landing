@@ -263,16 +263,28 @@ test('device selection prefers the active device and explains every failure', ()
 });
 
 test('each adapter resolves only its own environment keys, so no provider name leaks upward', () => {
-  const env = { SPOTIFY_CLIENT_ID: 'id', SPOTIFY_CLIENT_SECRET: 'secret', SPOTIFY_REDIRECT_URI: 'https://example.test/cb' };
+  const env = { SPOTIFY_CLIENT_ID: 'a'.repeat(32), SPOTIFY_CLIENT_SECRET: 'b'.repeat(32), SPOTIFY_REDIRECT_URI: 'https://example.test/cb' };
   const config = { origin: 'https://example.test', env };
   assert.equal(spotifyProvider.configured(config), true);
   assert.equal(spotifyProvider.configured({ origin: 'https://example.test', env: {} }), false);
-  // The registered URI is preferred over the derived one.
-  assert.equal(spotifyProvider.redirectUri(config, 'https://example.test/coda/api/music/spotify/callback'), 'https://example.test/cb');
-  assert.equal(spotifyProvider.redirectUri({ origin: 'https://example.test', env: {} }, 'https://example.test/derived'), 'https://example.test/derived');
-  // The fake provider needs no credentials at all.
+  // Credentials are read only by the adapter, and only its own keys.
+  assert.equal(spotifyProvider.envCredentials(config).clientId, 'a'.repeat(32));
+  assert.equal(spotifyProvider.envCredentials(config).redirectUri, 'https://example.test/cb');
+  assert.equal(spotifyProvider.envCredentials({ origin: 'https://example.test', env: {} }).clientId, null);
+  assert.deepEqual(Object.keys(spotifyProvider.envCredentials(config)).sort(), ['clientId', 'clientSecret', 'redirectUri']);
   const fake = createFakeProvider();
   assert.equal(fake.configured({ origin: 'http://localhost', env: {} }), true);
+});
+
+test('implausible app credentials are rejected before they are ever stored', () => {
+  const good = { clientId: 'a'.repeat(32), clientSecret: 'b'.repeat(32) };
+  assert.equal(spotifyProvider.validateCredentials(good), null);
+  for (const bad of [
+    { clientId: 'short', clientSecret: 'b'.repeat(32) },
+    { clientId: 'a'.repeat(32), clientSecret: 'nope' },
+    { clientId: 'z'.repeat(32), clientSecret: 'b'.repeat(32) },
+    { clientId: '', clientSecret: '' },
+  ]) assert.ok(spotifyProvider.validateCredentials(bad), `must reject ${JSON.stringify(bad).slice(0, 40)}`);
 });
 
 test('a member with no usable device gets a graceful reason, not a crash', async t => {
@@ -449,18 +461,21 @@ test('askKilo yields no intent when the model sends none, and the old string con
   assert.equal(typeof result, 'object', 'askKilo returns an object, not a bare string');
 });
 
-test('the reply route stores only the visible text and reports the intent without dispatching', async t => {
+test('the reply route stores the reply first, then reports the music outcome', async t => {
   const layer = layerFor(t);
   const { call } = await startServer(t, layer, async () => ({ text: 'One sec.', musicIntent: { action: 'play', query: 'The Chain' } }));
   const { id, room } = seed(layer.store);
   await call(id, `/rooms/${room}/messages`, 'POST', { text: 'Play The Chain for us' });
   const reply = await call(id, `/rooms/${room}/reply`, 'POST');
-  assert.equal(reply.status, 200);
-  assert.equal(reply.body.music.action, 'play', 'intent is surfaced for the dispatch step');
+  assert.equal(reply.status, 200, 'a music failure must not turn the reply into an error');
+  assert.equal(reply.body.music.state, 'failed');
+  assert.match(reply.body.music.message, /Nobody is opted in/);
   const history = layer.store.history(room);
-  assert.equal(history.at(-1).content, 'One sec.');
+  // The reply is never lost, and the intent itself is never stored.
+  assert.equal(history.find(entry => entry.author === 'coda' && entry.content === 'One sec.').content, 'One sec.');
+  assert.equal(history.at(-1).content, 'Nobody is opted in to shared listening in this room yet.');
   assert.ok(!JSON.stringify(history).includes('coda-music'), 'intent is never written into the transcript');
-  assert.equal(layer.provider.calls.filter(call => call.method === 'resolveTrack').length, 0, 'no provider is contacted in steps 1-3');
+  assert.equal(history.filter(entry => entry.author === 'coda').length, 2, 'exactly the reply plus one honest follow-up');
 });
 
 test('an unconfigured music service tells members plainly instead of pretending', async t => {

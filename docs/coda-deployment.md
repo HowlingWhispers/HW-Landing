@@ -46,17 +46,19 @@ file part. Production therefore stays on the normal text route and treats image
 content as metadata-only until the upstream vision route is manually repaired.
 Do not claim pixel inspection while that limitation is active.
 
-## Shared music (phases 1-3 landed; playback not yet enabled)
+## Shared music (phases 1-4 landed against a fake provider; Spotify playback disabled)
 
-Browser Coda can listen together through a music provider. The intent path is
-complete, but no provider is ever asked to play anything yet: a recognized
-intent is returned to the reply route and then dropped. Members are not yet
-able to start music, and the client has no music controls.
+Browser Coda can listen together through a music provider. The full dispatch
+path is implemented and exercised end to end against an in-memory provider, but
+the Spotify adapter declares no playback capabilities, so nothing real can play
+yet. Members still cannot start music: there is no music UI, and a recognized
+request ends in an honest explanation.
 
-Landed in this phase:
+Landed in phase 1-3 (foundation):
 
 - A provider-agnostic music layer under `server/music/`. Only `spotify.mjs`
-  knows what Spotify is. Adding another service means adding one adapter.
+  knows what Spotify is, including its environment variable names. Adding
+  another service means adding one adapter.
 - Provider tokens are sealed with AES-256-GCM under `CODA_TOKEN_KEY` and stored
   server-side only. A database copy alone cannot play anything in an account.
 - OAuth connect, callback, and disconnect. The state is single use, expires in
@@ -84,10 +86,37 @@ Landed in this phase:
   action. Malformed blocks are always stripped so internal markup cannot reach a
   member.
 
-To enable real playback, still required: step 4 dispatch, the client music
-controls, and a Spotify developer app whose client id, client secret, and
-registered redirect URI match `SPOTIFY_REDIRECT_URI` exactly. Playback
-requires a Spotify Premium account.
+Landed in phase 4 (dispatch):
+
+- `server/music/session.mjs` performs provider-neutral dispatch for play, pause,
+  resume, skip, queue, and now-playing. A provider must declare each capability
+  before dispatch will call it, so an adapter cannot be driven into a request it
+  has not implemented.
+- Track resolution happens once, before fan-out, so every listener receives the
+  same recording. Ambiguity raises a question instead of playing.
+- Each listener is attempted independently and the outcome is reported per
+  listener. A rate limit, dead device, revoked token, or non-Premium account on
+  one member never aborts the fan-out or affects anyone else's playback, and no
+  failure is retried in a loop.
+- The permission matrix is unchanged: asking for a track is allowed for any room
+  member because it plays for those who opted in, while pause, resume, and skip
+  require the requester to be one of the opted-in listeners. A member who is not
+  opted in is never controlled.
+- Disconnecting or leaving mid-session removes that listener from the next
+  dispatch immediately. The opt-in is re-checked after the roster is read, so a
+  member who leaves during device discovery is not touched either.
+- Playback runs after the reply is stored and can never take it down. Any music
+  problem becomes one short factual follow-up from Coda rather than a lost reply
+  or a failed request.
+- The room session record stores what started, on which recording, and when, so
+  drift correction can be added later as a read of that row without changing how
+  playback is issued.
+
+Real Spotify playback methods and capability declarations are implemented. A
+production deployment still needs the browser music controls built and a
+Spotify developer app whose client id, client secret, and registered redirect
+URI match `SPOTIFY_REDIRECT_URI` exactly. Playback requires a Spotify Premium
+account on each listener's account.
 
 ## Production deployment (existing Vienna host)
 

@@ -17,6 +17,8 @@ export function openStore(path) {
     CREATE TABLE IF NOT EXISTS music_connections(user TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, provider TEXT NOT NULL, access_sealed TEXT, refresh_sealed TEXT, expires INTEGER, scopes TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'connected', authorized_at INTEGER NOT NULL, updated INTEGER NOT NULL, PRIMARY KEY(user, provider));
     CREATE TABLE IF NOT EXISTS music_optin(room TEXT NOT NULL REFERENCES rooms(id) ON DELETE CASCADE, user TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, provider TEXT NOT NULL, device_hint TEXT, joined INTEGER NOT NULL, PRIMARY KEY(room, user, provider));
     CREATE TABLE IF NOT EXISTS music_oauth(token TEXT PRIMARY KEY, provider TEXT NOT NULL, user TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, expires INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS music_sessions(room TEXT PRIMARY KEY REFERENCES rooms(id) ON DELETE CASCADE, provider TEXT NOT NULL, state TEXT NOT NULL, track_uri TEXT, track_name TEXT, position_ms INTEGER NOT NULL DEFAULT 0, started_at INTEGER NOT NULL DEFAULT 0, updated INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS music_provider_config(user TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, provider TEXT NOT NULL, client_id TEXT NOT NULL, client_secret_sealed TEXT NOT NULL, redirect_uri TEXT, updated INTEGER NOT NULL, PRIMARY KEY(user, provider));
   `);
   const get = (sql, ...args) => db.prepare(sql).get(...args);
   const all = (sql, ...args) => db.prepare(sql).all(...args);
@@ -65,6 +67,23 @@ export function openStore(path) {
     // Terminal for a rejected refresh: the sealed material is destroyed and the
     // member is told to reconnect. The row survives only to carry that state.
     markMusicReconnectRequired: (user, provider) => run('UPDATE music_connections SET access_sealed=NULL, refresh_sealed=NULL, expires=NULL, status=?, updated=? WHERE user=? AND provider=?', 'reconnect_required', Date.now(), user, provider),
+    // Per-account music app credentials. The secret is sealed before it reaches
+    // this layer, exactly like a member's OAuth tokens. The client id and the
+    // redirect URI are not secret and stay readable so the UI can show what to
+    // register with the provider.
+    saveMusicProviderConfig: record => run(
+      'INSERT INTO music_provider_config(user,provider,client_id,client_secret_sealed,redirect_uri,updated) VALUES(?,?,?,?,?,?) ON CONFLICT(user,provider) DO UPDATE SET client_id=excluded.client_id, client_secret_sealed=excluded.client_secret_sealed, redirect_uri=excluded.redirect_uri, updated=excluded.updated',
+      record.user, record.provider, record.clientId, record.clientSecretSealed, record.redirectUri ?? null, Date.now(),
+    ),
+    musicProviderConfig: (user, provider) => get('SELECT * FROM music_provider_config WHERE user=? AND provider=?', user, provider),
+    clearMusicProviderConfig: (user, provider) => run('DELETE FROM music_provider_config WHERE user=? AND provider=?', user, provider),
+    // Dispatch records what was started, on which recording, and when. Drift
+    // correction is a later read of this row, so it needs no schema change and
+    // no change to how playback was issued.
+    saveMusicSession: record => run(
+      'INSERT INTO music_sessions(room,provider,state,track_uri,track_name,position_ms,started_at,updated) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(room) DO UPDATE SET provider=excluded.provider, state=excluded.state, track_uri=excluded.track_uri, track_name=excluded.track_name, position_ms=excluded.position_ms, started_at=excluded.started_at, updated=excluded.updated',
+      record.room, record.provider, record.state, record.trackUri ?? null, record.trackName ?? null, record.positionMs ?? 0, record.startedAt ?? 0, Date.now(),
+    ),
     // Disconnect is local and total: the connection row and every opt-in this
     // member held in any room go away together, so control stops immediately.
     removeMusicConnection(user, provider) {
