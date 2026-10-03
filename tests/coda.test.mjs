@@ -49,6 +49,28 @@ test('single-use invite grants room history; owner removal revokes it',async t=>
   await request('owner','/rooms/'+room+'/members','DELETE',{userId:'friend'});
   assert.equal((await request('friend','/rooms/'+room)).status,404);
 });
+test('guests can leave without destroying the room, and renaming stays host-only',async t=>{
+  const {request,store}=await setup(t);const room=(await request('owner','/rooms','POST',{title:'Shared'})).body.id;
+  await request('owner','/rooms/'+room+'/messages','POST',{text:'Keep this history'});
+  const invite=(await request('owner','/rooms/'+room+'/invite','POST')).body.url.split('#invite=')[1];
+  assert.equal((await request('friend','/join','POST',{token:invite})).status,200);
+  assert.equal((await request('friend','/rooms/'+room,'PATCH',{title:'Hijacked'})).status,403);
+  assert.equal((await request('friend','/rooms/'+room,'DELETE')).status,403);
+  assert.equal((await request('friend','/rooms/'+room+'/members','DELETE',{userId:'owner'})).status,400);
+  assert.equal((await request('friend','/rooms/'+room+'/members','DELETE',{userId:'stranger'})).status,403);
+  assert.equal((await request('owner','/rooms/'+room,'PATCH',{title:'  Renamed den  '})).status,200);
+  assert.equal((await request('owner','/rooms/'+room)).body.room.title,'Renamed den');
+  assert.equal((await request('owner','/rooms/'+room,'PATCH',{title:'Should not stick',mode:'invalid'})).status,400);
+  assert.equal((await request('owner','/rooms/'+room)).body.room.title,'Renamed den');
+  assert.equal((await request('owner','/rooms/'+room,'PATCH',{title:'   '})).status,400);
+  assert.equal((await request('owner','/rooms/'+room,'PATCH',{title:'x'.repeat(100)})).status,200);
+  assert.equal((await request('owner','/rooms/'+room)).body.room.title.length,80);
+  assert.equal((await request('owner','/rooms/'+room+'/members','DELETE',{userId:'owner'})).status,400);
+  assert.equal((await request('friend','/rooms/'+room+'/members','DELETE',{userId:'friend'})).status,200);
+  assert.equal((await request('friend','/rooms/'+room)).status,404);
+  const kept=await request('owner','/rooms/'+room);assert.equal(kept.status,200);assert.equal(kept.body.messages[0].content,'Keep this history');assert.deepEqual(kept.body.members.map(member=>member.id),['owner']);
+  assert.equal(store.get('SELECT count(*) AS n FROM rooms').n,1);assert.equal(store.get('SELECT count(*) AS n FROM messages').n,1);
+});
 test('expired and revoked invites cannot be redeemed; deleting a room cascades',async t=>{
   const {request,store}=await setup(t);const room=(await request('owner','/rooms','POST',{title:'Delete'})).body.id;
   const token=(await request('owner','/rooms/'+room+'/invite','POST')).body.url.split('#invite=')[1];

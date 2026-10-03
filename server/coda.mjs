@@ -79,9 +79,24 @@ export function createCodaServer(config, store, generate = askKilo, fetchImpl = 
       const room = store.get('SELECT * FROM rooms WHERE id=?', id);
       const owner = () => { if (room.owner !== session.id) fail(403, 'Only the room host can change this.'); };
       if (!action && req.method === 'GET') return send(200, { room, messages: store.history(id), members: store.all('SELECT u.id,u.name FROM users u JOIN members m ON m.user=u.id WHERE m.room=?', id), busy: busy.has(id) });
-      if (!action && req.method === 'PATCH') { owner(); const data = await body(req); if (!['reply','listen'].includes(data.mode)) fail(400,'Choose reply or listen.'); store.run('UPDATE rooms SET mode=? WHERE id=?', data.mode,id); return send(200,{ok:true}); }
+      if (!action && req.method === 'PATCH') {
+        owner(); const data = await body(req);
+        if (data.title === undefined && data.mode === undefined) fail(400,'Nothing to change.');
+        const title = data.title === undefined ? undefined : String(data.title || '').trim().slice(0,80);
+        if (title !== undefined && !title) fail(400,'Give your conversation a name.');
+        if (data.mode !== undefined && !['reply','listen'].includes(data.mode)) fail(400,'Choose reply or listen.');
+        if (title !== undefined) store.run('UPDATE rooms SET title=? WHERE id=?',title,id);
+        if (data.mode !== undefined) store.run('UPDATE rooms SET mode=? WHERE id=?',data.mode,id);
+        return send(200,{ok:true});
+      }
       if (!action && req.method === 'DELETE') { owner(); if (busy.has(id)) fail(409,'Wait for Coda to finish before deleting this room.'); store.run('DELETE FROM rooms WHERE id=?',id); return send(200,{ok:true}); }
-      if (action === 'members' && req.method === 'DELETE') { owner(); const data = await body(req); if (data.userId === room.owner) fail(400,'The host cannot be removed.'); store.run('DELETE FROM members WHERE room=? AND user=?',id,String(data.userId)); return send(200,{ok:true}); }
+      if (action === 'members' && req.method === 'DELETE') {
+        const data = await body(req); const target = String(data.userId || '');
+        // Anyone may remove themselves; removing a fellow member stays host-only.
+        if (target === room.owner) fail(400,'The host cannot leave or be removed. Delete the conversation instead.');
+        if (target !== session.id) owner();
+        store.run('DELETE FROM members WHERE room=? AND user=?',id,target); return send(200,{ok:true});
+      }
       if (action === 'invite' && req.method === 'POST') {
         owner(); limit(session.id + ':invite', 10); store.run('DELETE FROM invites WHERE expires<?',Date.now());
         const invite = token(); store.run('INSERT INTO invites VALUES(?,?,?)',hash(invite),id,Date.now()+86400_000);

@@ -12,8 +12,9 @@ Discord OAuth plus room membership protects every conversation operation.
 - Durable SQLite room history, named speakers and 2.5-second room updates.
 - Every signed-in member can create private rooms; joining another member's room
   still requires a single-use 24-hour invite.
-- Hosts invite/remove guests, revoke outstanding invites, delete rooms and
-  toggle listening. Guests can converse and ask Coda within their joined rooms.
+- Hosts rename conversations, invite/remove guests, revoke outstanding invites,
+  delete rooms and toggle listening. Guests can leave conversations themselves,
+  and can converse and ask Coda within their joined rooms.
 - Ask Coda retries saved messages without duplicating the user's message.
 - Same Kilo sidecar session API used by HW-Coda, fresh session per reply, all
   tools denied, cleanup after each turn, per-member rate limits and room locks.
@@ -46,7 +47,8 @@ It does not alter the running Discord bot or its provider behavior.
    Retain existing routes. `nginx -t` before reloading Nginx.
 7. Check loopback `/coda/api/health`, public `/coda`, Discord login, room creation,
    a real Kilo reply, invite redemption in a second account, and denial of an
-   unrelated third account. Verify room refresh, listening and guest removal.
+   unrelated third account. Verify room refresh, rename, listening, guest leave,
+   guest removal, and that leaving preserves the room and its message history.
    Check logs for failures without printing environment files or credentials.
 
 The source is deployable; it is not proof that the production service is live.
