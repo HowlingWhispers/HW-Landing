@@ -7,7 +7,7 @@ import { askKilo } from '../server/kilo.mjs';
 async function setup(t, generate) {
   const store=openStore(':memory:');
   for(const id of ['owner','friend','stranger']){store.run('INSERT INTO users VALUES(?,?)',id,id);store.run('INSERT INTO sessions VALUES(?,?,?)',hash(id+'-session'),id,Date.now()+60000);}
-  const server=createCodaServer({origin:'http://localhost',creators:['owner'],clientId:'id',clientSecret:'secret',kiloPassword:'secret'},store,generate || (async()=> 'Woof.'));
+  const server=createCodaServer({origin:'http://localhost',clientId:'id',clientSecret:'secret',kiloPassword:'secret'},store,generate || (async()=> 'Woof.'));
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   t.after(async()=>{await new Promise(resolve=>server.close(resolve));store.db.close();});
   const request=async(user,path,method='GET',data,origin='http://localhost')=>{
@@ -16,14 +16,27 @@ async function setup(t, generate) {
   };
   return {store,request};
 }
-test('rooms are isolated, guests cannot enumerate or create rooms, forged origins fail',async t=>{
+test('authenticated members create isolated rooms and forged origins fail',async t=>{
   const {request}=await setup(t);
   const room=(await request('owner','/rooms','POST',{title:'Private'})).body.id;
   assert.equal((await request('stranger','/rooms/'+room)).status,404);
   assert.deepEqual((await request('stranger','/rooms')).body.rooms,[]);
-  assert.equal((await request('friend','/rooms','POST',{title:'No'})).status,403);
+  const friendRoom=(await request('friend','/rooms','POST',{title:'Friend private'}));
+  assert.equal(friendRoom.status,201);
+  assert.equal((await request('owner','/rooms/'+friendRoom.body.id)).status,404);
   assert.equal((await request('owner','/rooms/'+room+'/messages','POST',{text:'hi'},'https://evil.example')).status,403);
   assert.equal((await request('none','/rooms')).status,401);
+});
+test('a fresh non-owner can create, message, and reopen their conversation',async t=>{
+  const {request}=await setup(t);
+  const bootstrap=await request('friend','/me');
+  assert.equal(bootstrap.status,200);assert.equal(bootstrap.body.user.id,'friend');assert.equal(bootstrap.body.providerReady,true);
+  assert.deepEqual((await request('friend','/rooms')).body.rooms,[]);
+  const created=await request('friend','/rooms','POST',{title:'My den'});assert.equal(created.status,201);
+  assert.equal((await request('friend','/rooms/'+created.body.id+'/messages','POST',{text:'Hello Coda'})).status,201);
+  assert.equal((await request('friend','/rooms/'+created.body.id+'/reply','POST')).status,200);
+  const reopened=(await request('friend','/rooms')).body.rooms;assert.equal(reopened.length,1);assert.equal(reopened[0].id,created.body.id);
+  const detail=await request('friend','/rooms/'+created.body.id);assert.equal(detail.status,200);assert.deepEqual(detail.body.messages.map(message=>message.author),['friend','coda']);
 });
 test('single-use invite grants room history; owner removal revokes it',async t=>{
   const {request}=await setup(t);const room=(await request('owner','/rooms','POST',{title:'Shared'})).body.id;

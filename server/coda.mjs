@@ -57,13 +57,12 @@ export function createCodaServer(config, store, generate = askKilo, fetchImpl = 
         return redirect('/coda', [cookie(cookieName, session, 7*86400), cookie('hw_coda_state', '', 0)]);
       }
       const session = cookies[cookieName] && store.get('SELECT u.id,u.name FROM sessions s JOIN users u ON u.id=s.user WHERE s.token=? AND s.expires>?', hash(cookies[cookieName]), Date.now());
-      if (path === '/coda/api/me' && req.method === 'GET') return send(200, { user: session || null, configured: Boolean(config.clientId && config.clientSecret), providerReady: Boolean(config.kiloPassword), canCreate: Boolean(session && config.creators.includes(session.id)) });
+      if (path === '/coda/api/me' && req.method === 'GET') return send(200, { user: session || null, configured: Boolean(config.clientId && config.clientSecret), providerReady: Boolean(config.kiloPassword) });
       if (!session) fail(401, 'Sign in with Discord to enter your den.');
       limit(session.id + ':requests', 120);
       if (path === '/coda/api/logout' && req.method === 'POST') { store.run('DELETE FROM sessions WHERE token=?', hash(cookies[cookieName])); res.setHeader('Set-Cookie', cookie(cookieName, '', 0)); return send(200, { ok: true }); }
       if (path === '/coda/api/rooms' && req.method === 'GET') return send(200, { rooms: store.all('SELECT r.* FROM rooms r JOIN members m ON m.room=r.id WHERE m.user=? ORDER BY r.created DESC', session.id) });
       if (path === '/coda/api/rooms' && req.method === 'POST') {
-        if (!config.creators.includes(session.id)) fail(403, 'New rooms are currently available to invited hosts only.');
         const data = await body(req); const title = String(data.title || '').trim().slice(0,80);
         if (!title) fail(400, 'Give your room a name.');
         if (store.get('SELECT COUNT(*) AS n FROM rooms WHERE owner=?', session.id).n >= 30) fail(409, 'You already have 30 rooms. Delete an old room first.');
@@ -118,7 +117,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   if (new URL(origin).origin !== origin) throw new Error('CODA_WEB_ORIGIN must be an origin without a trailing slash');
   const path = env.CODA_WEB_DB || '/var/lib/hw-coda-web/rooms.sqlite'; mkdirSync(dirname(path),{recursive:true,mode:0o700});
   const store = openStore(path);
-  const config = { origin, clientId: env.DISCORD_BOT_CLIENT_ID || env.DISCORD_CLIENT_ID, clientSecret: env.DISCORD_CLIENT_SECRET, creators: (env.CODA_WEB_CREATORS || env.DISCORD_OWNER_USER_ID || '').split(',').map(x=>x.trim()).filter(Boolean), kiloUrl: env.CODA_KILO_BASE_URL || 'http://127.0.0.1:4096', kiloUsername: env.KILO_SERVER_USERNAME || 'kilo', kiloPassword: env.KILO_SERVER_PASSWORD, kiloModel: env.CODA_KILO_MODEL || 'kilo/kilo-auto/free' };
+  const config = { origin, clientId: env.DISCORD_BOT_CLIENT_ID || env.DISCORD_CLIENT_ID, clientSecret: env.DISCORD_CLIENT_SECRET, kiloUrl: env.CODA_KILO_BASE_URL || 'http://127.0.0.1:4096', kiloUsername: env.KILO_SERVER_USERNAME || 'kilo', kiloPassword: env.KILO_SERVER_PASSWORD, kiloModel: env.CODA_KILO_MODEL || 'kilo/kilo-auto/free' };
   const server = createCodaServer(config,store);
   server.listen(Number(env.CODA_WEB_PORT || 3218),'127.0.0.1',()=>console.log('Coda Web listening on loopback'));
   for (const signal of ['SIGINT','SIGTERM']) process.on(signal,()=>server.close(()=>{store.db.close();process.exit(0);}));

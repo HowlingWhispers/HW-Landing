@@ -10,7 +10,8 @@ Discord OAuth plus room membership protects every conversation operation.
 - Discord identify-only OAuth with single-use, cookie-bound state and opaque,
   hashed, HttpOnly session cookies (Secure in production, seven-day expiry).
 - Durable SQLite room history, named speakers and 2.5-second room updates.
-- Allowlisted hosts create rooms; anyone else needs a single-use 24-hour invite.
+- Every signed-in member can create private rooms; joining another member's room
+  still requires a single-use 24-hour invite.
 - Hosts invite/remove guests, revoke outstanding invites, delete rooms and
   toggle listening. Guests can converse and ask Coda within their joined rooms.
 - Ask Coda retries saved messages without duplicating the user's message.
@@ -34,7 +35,7 @@ It does not alter the running Discord bot or its provider behavior.
    using the normal landing deploy procedure.
 3. Copy `.env.coda.example` to `.env.coda`, mode 600 readable only by the service
    account. Populate Discord client ID/secret and owner ID from the existing
-   server configuration. Set `CODA_WEB_CREATORS` for any additional room hosts.
+   server configuration.
    Reuse `CODA_KILO_BASE_URL`, `KILO_SERVER_USERNAME` and `KILO_SERVER_PASSWORD`
    from the running Coda sidecar. Never expose these to Vite or browsers.
 4. Add `https://thehowlingwhispers.com/coda/api/callback` to the Discord
