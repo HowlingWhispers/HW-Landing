@@ -1,0 +1,47 @@
+name: Publish launcher assets
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-launcher-assets.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch CML Base Resources v1
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          curl --fail --location --retry 3 \
+            'https://cdn.discordapp.com/attachments/1554787276825825321/1557240181575131257/CML-Base-Resources-v1_1.zip?ex=6ac7146f&is=6ac5c2ef&hm=b7d82e1c6da8b057736fdfd29e8441bdba1f17f12d296333ec858520df27c87f&' \
+            --output dist/CML-Base-Resources-v1.zip
+
+          echo "031f3b05d3efaf9b40436fedfee64cecfd92cf8d259edc3b637a633905231838  dist/CML-Base-Resources-v1.zip" | sha256sum --check -
+
+      - name: Publish permanent GitHub release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="launcher-assets-v1"
+          ASSET="dist/CML-Base-Resources-v1.zip"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ASSET" --clobber
+          else
+            gh release create "$TAG" "$ASSET" \
+              --target "$GITHUB_SHA" \
+              --title "CodaLauncher Assets v1" \
+              --notes "Permanent deployment assets for the Howling Whispers launcher feed." \
+              --prerelease
+          fi
