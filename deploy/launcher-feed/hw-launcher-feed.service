@@ -1,0 +1,22 @@
+[Unit]
+Description=Howling Whispers CodaLauncher public feed
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/howling-whispers/landing
+EnvironmentFile=/etc/hw-launcher-feed.env
+ExecStart=/usr/bin/node server/launcher-feed.mjs
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/srv/howling-whispers/landing
+
+[Install]
+WantedBy=multi-user.target

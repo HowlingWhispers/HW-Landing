@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "updated": "2026-10-07T00:00:00Z",
+  "items": [
+    {
+      "id": "codalauncher-begins",
+      "date": "2026-10-07",
+      "title": "CodaLauncher begins",
+      "text": "A dedicated Howling Whispers launcher is taking shape with news, updates, mods, profiles, settings and logs planned for one Coda-flavored home."
+    },
+    {
+      "id": "codaloader-0011",
+      "date": "2026-10-07",
+      "title": "CodaLoader 0.0.11",
+      "text": "The title-screen controls, custom music, Howling Whispers branding and Windows updater continue to settle into a cleaner CML experience."
+    },
+    {
+      "id": "identity-roadmap",
+      "date": "2026-10-07",
+      "title": "CML identity is on the roadmap",
+      "text": "Future CML accounts will separate Minecraft ownership proof from Howling Whispers identity, Discord linking and custom player profiles."
+    }
+  ]
+}

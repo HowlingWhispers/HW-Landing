@@ -10,7 +10,9 @@
     "lint": "tsc -b --pretty false",
     "coda:start": "node --env-file=.env.coda server/coda.mjs",
     "test:coda": "node --test tests/*.test.mjs",
-    "test:ui": "vitest run src/*.test.tsx"
+    "test:ui": "vitest run src/*.test.tsx",
+    "launcher-feed:start": "node server/launcher-feed.mjs",
+    "test:launcher-feed": "node --test tests/launcher-feed.test.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
