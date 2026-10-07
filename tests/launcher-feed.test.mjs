@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createLauncherFeedServer } from '../server/launcher-feed.mjs';
@@ -17,8 +17,15 @@ function makeDataDir() {
   return dir;
 }
 
+function makeAssetDir() {
+  const dir = mkdtempSync(join(tmpdir(), 'hw-launcher-assets-'));
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, 'CML-BasePack-v1.zip'), Buffer.from('PK-test'));
+  return dir;
+}
+
 test('launcher feed serves public read-only JSON', async t => {
-  const server = createLauncherFeedServer({ dataDir: makeDataDir() });
+  const server = createLauncherFeedServer({ dataDir: makeDataDir(), assetDir: makeAssetDir() });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(() => new Promise(resolve => server.close(resolve)));
   const { port } = server.address();
@@ -37,6 +44,10 @@ test('launcher feed serves public read-only JSON', async t => {
   const page = await fetch(`http://127.0.0.1:${port}/`);
   assert.equal(page.status, 200);
   assert.match(await page.text(), /CodaLauncher Feed/);
+
+  const pack = await fetch(`http://127.0.0.1:${port}/assets/CML-BasePack-v1.zip`);
+  assert.equal(pack.status, 200);
+  assert.equal(pack.headers.get('content-type'), 'application/zip');
 
   const post = await fetch(`http://127.0.0.1:${port}/api/news`, { method: 'POST' });
   assert.equal(post.status, 405);

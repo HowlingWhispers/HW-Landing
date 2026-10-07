@@ -4,13 +4,19 @@
   "project": "Howling Whispers",
   "launcher": {
     "name": "CodaLauncher",
-    "phase": "prototype",
-    "available": false
+    "phase": "installer",
+    "available": true
   },
   "codaloader": {
-    "version": "0.0.11-menu-label-clear",
+    "version": "0.0.16-launcher-managed",
     "minecraft": "26.4-snapshot-3",
     "releasePage": "https://github.com/HowlingWhispers/HW-CodaLoader/releases"
+  },
+  "basePack": {
+    "required": true,
+    "version": "1",
+    "url": "/assets/CML-BasePack-v1.zip",
+    "sha256": "13152d503929d55fd685dfaffbbd2b4df66a13619a907deff85097b10de66bf8"
   },
   "links": {
     "project": "https://github.com/HowlingWhispers",

@@ -29,6 +29,7 @@ else
   echo "Keeping existing /etc/hw-launcher-feed.env"
 fi
 
+mkdir -p "$REPO_DIR/launcher-feed/assets"
 install -m 0644 "$HERE/hw-launcher-feed.service" /etc/systemd/system/hw-launcher-feed.service
 systemctl daemon-reload
 systemctl enable --now hw-launcher-feed.service

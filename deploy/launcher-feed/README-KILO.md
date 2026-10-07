@@ -12,6 +12,10 @@ From a fresh/pulled `HowlingWhispers/HW-Landing` main checkout:
 cd /srv/howling-whispers/landing
 npm ci
 npm run test:launcher-feed
+mkdir -p launcher-feed/assets
+# Copy CML-BasePack-v1.zip into launcher-feed/assets/
+# Expected SHA-256:
+# 13152d503929d55fd685dfaffbbd2b4df66a13619a907deff85097b10de66bf8
 sudo ./deploy/launcher-feed/install.sh /srv/howling-whispers/landing
 curl -fsS http://127.0.0.1:3220/api/health
 ```
@@ -27,6 +31,7 @@ http://SERVER_IP:3220/
 http://SERVER_IP:3220/api/news
 http://SERVER_IP:3220/api/status
 http://SERVER_IP:3220/api/feed
+http://SERVER_IP:3220/assets/CML-BasePack-v1.zip
 ```
 
 ## Domain
@@ -56,7 +61,7 @@ so news/status changes do not require a restart.
 - CORS `*` is intentional for a desktop launcher.
 - This service contains public display data only.
 - Do not put secrets or user data in the JSON files.
-- The feed may show release information and links, but it is not trusted to
-  provide executable updater payloads.
-- CodaLoader/CodaLauncher binaries should continue to come from verified HTTPS
-  release infrastructure with integrity checks.
+- The service may host the mandatory CML Base Pack ZIP. It contains only presentation assets.
+- CodaLauncher verifies the base pack against the SHA-256 advertised by /api/feed.
+- The feed is not trusted to provide CodaLauncher or CodaLoader executable payloads.
+- CodaLoader/CodaLauncher binaries continue to come from GitHub Releases with integrity checks.

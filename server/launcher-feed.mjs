@@ -1,10 +1,11 @@
 import { createServer } from 'node:http';
-import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { createReadStream, readFileSync, statSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_DATA_DIR = join(HERE, '..', 'launcher-feed', 'data');
+const DEFAULT_ASSET_DIR = join(HERE, '..', 'launcher-feed', 'assets');
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
@@ -35,6 +36,19 @@ function sendJson(req, res, status, body) {
   });
   if (req.method === 'HEAD') return res.end();
   res.end(text);
+}
+
+function sendFile(req, res, path) {
+  const stat = statSync(path);
+  res.writeHead(200, {
+    ...commonHeaders(),
+    'Content-Type': 'application/zip',
+    'Content-Length': stat.size,
+    'Cache-Control': 'public, max-age=3600',
+    'Content-Disposition': 'attachment; filename="' + basename(path) + '"'
+  });
+  if (req.method === 'HEAD') return res.end();
+  createReadStream(path).pipe(res);
 }
 
 function sendHtml(req, res, body) {
@@ -90,7 +104,10 @@ footer{margin-top:30px;color:#7194a3;font-size:.85rem}code{color:#aeeaff}
 </main></body></html>`;
 }
 
-export function createLauncherFeedServer({ dataDir = DEFAULT_DATA_DIR } = {}) {
+export function createLauncherFeedServer({
+  dataDir = DEFAULT_DATA_DIR,
+  assetDir = DEFAULT_ASSET_DIR
+} = {}) {
   return createServer((req, res) => {
     try {
       if (req.method === 'OPTIONS') {
@@ -114,6 +131,9 @@ export function createLauncherFeedServer({ dataDir = DEFAULT_DATA_DIR } = {}) {
       if (url.pathname === '/api/news') return sendJson(req, res, 200, feed.news);
       if (url.pathname === '/api/status') return sendJson(req, res, 200, feed.status);
       if (url.pathname === '/api/feed') return sendJson(req, res, 200, { ...feed.status, news: feed.news.items });
+      if (url.pathname === '/assets/CML-BasePack-v1.zip') {
+        return sendFile(req, res, join(assetDir, 'CML-BasePack-v1.zip'));
+      }
       if (url.pathname === '/' || url.pathname === '/index.html') return sendHtml(req, res, page(feed));
       return sendJson(req, res, 404, { error: 'not found' });
     } catch (error) {
@@ -127,7 +147,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const host = process.env.LAUNCHER_FEED_HOST || '127.0.0.1';
   const port = Number(process.env.LAUNCHER_FEED_PORT || 3220);
   const dataDir = process.env.LAUNCHER_FEED_DATA || DEFAULT_DATA_DIR;
-  const server = createLauncherFeedServer({ dataDir });
+  const assetDir = process.env.LAUNCHER_FEED_ASSETS || DEFAULT_ASSET_DIR;
+  const server = createLauncherFeedServer({ dataDir, assetDir });
   server.listen(port, host, () => {
     console.log(`[launcher-feed] listening on http://${host}:${port}`);
   });
