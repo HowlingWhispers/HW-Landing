@@ -1,10 +1,10 @@
 {
-  "schema": 1,
-  "apiVersion": 1,
+  "schema": 2,
+  "apiVersion": 2,
   "project": "Howling Whispers",
   "launcher": {
     "name": "CodaLauncher",
-    "phase": "installer",
+    "phase": "packs",
     "available": true
   },
   "codaloader": {
@@ -12,11 +12,33 @@
     "minecraft": "26.4-snapshot-3",
     "releasePage": "https://github.com/HowlingWhispers/HW-CodaLoader/releases"
   },
+  "packs": [
+    {
+      "id": "cml-base",
+      "name": "CML Base",
+      "version": "1",
+      "required": true,
+      "description": "Required foundation pack for Howling Whispers Minecraft.",
+      "resourcePacks": ["cml-base-resources"]
+    }
+  ],
+  "resourcePacks": [
+    {
+      "id": "cml-base-resources",
+      "name": "CML Base Resources",
+      "version": "1",
+      "required": true,
+      "description": "Official title banner, panorama scenes, menu music, splashes and shared presentation assets.",
+      "url": "/assets/CML-Base-Resources-v1.zip",
+      "sha256": "031f3b05d3efaf9b40436fedfee64cecfd92cf8d259edc3b637a633905231838",
+      "requiredBy": ["cml-base"]
+    }
+  ],
   "basePack": {
     "required": true,
     "version": "1",
-    "url": "/assets/CML-BasePack-v1.zip",
-    "sha256": "13152d503929d55fd685dfaffbbd2b4df66a13619a907deff85097b10de66bf8"
+    "url": "/assets/CML-Base-Resources-v1.zip",
+    "sha256": "031f3b05d3efaf9b40436fedfee64cecfd92cf8d259edc3b637a633905231838"
   },
   "links": {
     "project": "https://github.com/HowlingWhispers",
