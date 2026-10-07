@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { createReadStream, readFileSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -39,6 +39,7 @@ function sendJson(req, res, status, body) {
 }
 
 function sendFile(req, res, path) {
+  if (!existsSync(path)) return sendJson(req, res, 404, { error: 'asset not found' });
   const stat = statSync(path);
   res.writeHead(200, {
     ...commonHeaders(),
@@ -131,8 +132,9 @@ export function createLauncherFeedServer({
       if (url.pathname === '/api/news') return sendJson(req, res, 200, feed.news);
       if (url.pathname === '/api/status') return sendJson(req, res, 200, feed.status);
       if (url.pathname === '/api/feed') return sendJson(req, res, 200, { ...feed.status, news: feed.news.items });
-      if (url.pathname === '/assets/CML-BasePack-v1.zip') {
-        return sendFile(req, res, join(assetDir, 'CML-BasePack-v1.zip'));
+      if (url.pathname === '/assets/CML-Base-Resources-v1.zip'
+          || url.pathname === '/assets/CML-BasePack-v1.zip') {
+        return sendFile(req, res, join(assetDir, 'CML-Base-Resources-v1.zip'));
       }
       if (url.pathname === '/' || url.pathname === '/index.html') return sendHtml(req, res, page(feed));
       return sendJson(req, res, 404, { error: 'not found' });
