@@ -1,0 +1,35 @@
+name: Test CodaLauncher feed
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "server/launcher-feed.mjs"
+      - "launcher-feed/**"
+      - "tests/launcher-feed.test.mjs"
+      - "package.json"
+      - ".github/workflows/launcher-feed.yml"
+  pull_request:
+    paths:
+      - "server/launcher-feed.mjs"
+      - "launcher-feed/**"
+      - "tests/launcher-feed.test.mjs"
+      - "package.json"
+      - ".github/workflows/launcher-feed.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npm run test:launcher-feed
