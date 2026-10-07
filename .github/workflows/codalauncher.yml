@@ -1,0 +1,26 @@
+name: Check CodaLauncher
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "codalauncher/**"
+      - ".github/workflows/codalauncher.yml"
+  pull_request:
+    paths:
+      - "codalauncher/**"
+      - ".github/workflows/codalauncher.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rust stable
+        run: rustup default stable
+      - name: Check native launcher
+        run: cargo check --manifest-path codalauncher/src-tauri/Cargo.toml

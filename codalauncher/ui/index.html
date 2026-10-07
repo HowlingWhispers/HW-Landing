@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>CodaLauncher</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="rail">
+      <div class="brand">
+        <span class="paw">◆</span>
+        <div><strong>CODA</strong><small>Howling Whispers</small></div>
+      </div>
+      <nav>
+        <button class="nav active" data-view="home">Home</button>
+        <button class="nav" data-view="mods">Mods <span id="mod-count-pill">0</span></button>
+        <button class="nav" data-view="logs">Logs</button>
+        <button class="nav" data-view="settings">Settings</button>
+      </nav>
+      <div class="rail-foot">
+        <div class="status-dot" id="rail-dot"></div>
+        <span id="rail-status">Looking for CodaLoader…</span>
+      </div>
+    </aside>
+
+    <main>
+      <section class="view active" id="view-home">
+        <div class="hero">
+          <img src="assets/coda-workshop.webp" alt="" class="hero-art">
+          <div class="hero-shade"></div>
+          <div class="hero-copy">
+            <div class="eyebrow">HOWLING WHISPERS</div>
+            <h1>Welcome to CodaLauncher.</h1>
+            <p id="hero-status">Checking the den before we open the door.</p>
+            <div class="hero-actions">
+              <button id="play" class="play">PLAY</button>
+              <button id="refresh" class="ghost">Refresh</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard">
+          <div class="left-column">
+            <div class="stat-grid">
+              <article class="stat">
+                <span>CodaLoader</span>
+                <strong id="loader-version">Unknown</strong>
+                <small id="loader-state">Not inspected yet</small>
+              </article>
+              <article class="stat">
+                <span>Minecraft</span>
+                <strong id="minecraft-version">26.4 Snapshot 3</strong>
+                <small>First pinned CML target</small>
+              </article>
+              <article class="stat">
+                <span>Mods</span>
+                <strong id="home-mod-count">0</strong>
+                <small>Installed CML jars</small>
+              </article>
+              <article class="stat">
+                <span>Launcher</span>
+                <strong>0.1.0</strong>
+                <small>Prototype shell</small>
+              </article>
+            </div>
+
+            <section class="panel">
+              <div class="panel-head"><div><div class="eyebrow">NEXT UP</div><h2>CML control center</h2></div></div>
+              <p>This first build already talks to CodaLoader, launches Minecraft without a normal console window, reads CML mod metadata, tails logs and has a real online-news slot.</p>
+              <div class="chips"><span>Profiles later</span><span>Discord link later</span><span>Ownership later</span></div>
+            </section>
+          </div>
+
+          <section class="panel news-panel">
+            <div class="panel-head">
+              <div><div class="eyebrow">FROM THE DEN</div><h2>News</h2></div>
+              <button id="news-refresh" class="icon-button" title="Refresh news">↻</button>
+            </div>
+            <div id="news" class="news-list">
+              <article class="news-card">
+                <span>LOCAL</span><h3>CodaLauncher wakes up</h3>
+                <p>Connect a launcher feed URL in Settings to pull live Howling Whispers news.</p>
+              </article>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-mods">
+        <header class="page-head"><div><div class="eyebrow">CML</div><h1>Installed mods</h1></div><button id="mods-refresh" class="ghost">Refresh</button></header>
+        <div id="mods-list" class="mods-list"></div>
+      </section>
+
+      <section class="view" id="view-logs">
+        <header class="page-head"><div><div class="eyebrow">DIAGNOSTICS</div><h1>Logs</h1></div><button id="logs-refresh" class="ghost">Refresh</button></header>
+        <pre id="logs">No logs loaded yet.</pre>
+      </section>
+
+      <section class="view" id="view-settings">
+        <header class="page-head"><div><div class="eyebrow">LOCAL</div><h1>Settings</h1></div></header>
+        <div class="settings-grid">
+          <label>
+            <span>CodaLoader install folder</span>
+            <input id="install-root" placeholder="C:\path\to\CodaLoader">
+            <small>The folder containing CodaLoader.jar.</small>
+          </label>
+          <label>
+            <span>Launcher feed URL</span>
+            <input id="feed-url" placeholder="http://SERVER_IP:3220/api/feed">
+            <small>Optional for now. A domain is not required for the public feed.</small>
+          </label>
+          <label class="future">
+            <span>Profile</span>
+            <input value="CML identity arrives later" disabled>
+            <small>Discord linking, ownership proof and avatar editing are roadmap items.</small>
+          </label>
+        </div>
+        <button id="save-settings" class="play small">Save & inspect</button>
+      </section>
+    </main>
+
+    <div id="toast" class="toast"></div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
