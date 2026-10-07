@@ -29,7 +29,24 @@ else
   echo "Keeping existing /etc/hw-launcher-feed.env"
 fi
 
-mkdir -p "$REPO_DIR/launcher-feed/assets"
+ASSET_DIR="$REPO_DIR/launcher-feed/assets"
+ASSET_FILE="$ASSET_DIR/CML-Base-Resources-v1.zip"
+ASSET_URL="https://github.com/HowlingWhispers/HW-Landing/releases/download/launcher-assets-v1/CML-Base-Resources-v1.zip"
+ASSET_SHA256="031f3b05d3efaf9b40436fedfee64cecfd92cf8d259edc3b637a633905231838"
+
+mkdir -p "$ASSET_DIR"
+
+if [[ ! -f "$ASSET_FILE" ]] || ! echo "$ASSET_SHA256  $ASSET_FILE" | sha256sum --check --status; then
+  echo "Fetching CML Base Resources from HW-Landing GitHub Releases..."
+  tmp="$ASSET_FILE.part"
+  rm -f "$tmp"
+  curl --fail --location --retry 3 "$ASSET_URL" --output "$tmp"
+  echo "$ASSET_SHA256  $tmp" | sha256sum --check -
+  mv "$tmp" "$ASSET_FILE"
+else
+  echo "CML Base Resources already present and verified."
+fi
+
 install -m 0644 "$HERE/hw-launcher-feed.service" /etc/systemd/system/hw-launcher-feed.service
 systemctl daemon-reload
 systemctl enable --now hw-launcher-feed.service
