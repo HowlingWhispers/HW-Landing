@@ -1,7 +1,13 @@
 {
   "schema": 1,
-  "updated": "2026-10-07T00:00:00Z",
+  "updated": "2026-10-07T04:25:00Z",
   "items": [
+    {
+      "id": "cml-packs-and-scenes",
+      "date": "2026-10-07",
+      "title": "CML Packs and menu scenes arrive",
+      "text": "CodaLauncher now has Packs and Resourcepacks, starting with required CML Base and CML Base Resources. CodaLoader 0.0.17 also adds classic and experimental Banner Sweep menu scenes with random selection between title-menu visits."
+    },
     {
       "id": "codalauncher-begins",
       "date": "2026-10-07",
