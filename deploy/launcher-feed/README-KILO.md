@@ -4,6 +4,11 @@ This folder is intentionally self-contained. The launcher feed is a tiny,
 read-only Node service. It needs no database, Discord credentials, Minecraft
 credentials, domain, or extra npm dependency.
 
+Deployment assets are published under the `launcher-assets-v1` GitHub Release in
+`HowlingWhispers/HW-Landing`. The installer downloads and SHA-256 verifies any
+required asset automatically. Kilo should not need Discord/CDN or ChatGPT file
+links for normal deployment.
+
 ## Install
 
 From a fresh/pulled `HowlingWhispers/HW-Landing` main checkout:
@@ -12,10 +17,6 @@ From a fresh/pulled `HowlingWhispers/HW-Landing` main checkout:
 cd /srv/howling-whispers/landing
 npm ci
 npm run test:launcher-feed
-mkdir -p launcher-feed/assets
-# Copy CML-Base-Resources-v1.zip into launcher-feed/assets/
-# Expected SHA-256:
-# 031f3b05d3efaf9b40436fedfee64cecfd92cf8d259edc3b637a633905231838
 sudo ./deploy/launcher-feed/install.sh /srv/howling-whispers/landing
 curl -fsS http://127.0.0.1:3220/api/health
 ```
@@ -61,7 +62,7 @@ so news/status changes do not require a restart.
 - CORS `*` is intentional for a desktop launcher.
 - This service contains public display data only.
 - Do not put secrets or user data in the JSON files.
-- The service may host the mandatory CML Base Resources ZIP. It contains the CML Base Pack's presentation assets: title/banner, panoramas, menu music, splashes and related defaults.
+- The service hosts the mandatory CML Base Resources ZIP after fetching it from the HW-Landing GitHub Release. It contains the CML Base Pack's presentation assets: title/banner, panoramas, menu music, splashes and related defaults.
 - CodaLauncher verifies the resource pack against the SHA-256 advertised by /api/feed and installs it automatically as a dependency of CML Base.
 - The feed is not trusted to provide CodaLauncher or CodaLoader executable payloads.
 - CodaLoader/CodaLauncher binaries continue to come from GitHub Releases with integrity checks.
