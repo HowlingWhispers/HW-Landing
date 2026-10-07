@@ -8,7 +8,7 @@
     "available": true
   },
   "codaloader": {
-    "version": "0.0.16-launcher-managed",
+    "version": "0.0.17-menu-scenes",
     "minecraft": "26.4-snapshot-3",
     "releasePage": "https://github.com/HowlingWhispers/HW-CodaLoader/releases"
   },
