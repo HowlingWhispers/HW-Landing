@@ -20,7 +20,7 @@ function makeDataDir() {
 function makeAssetDir() {
   const dir = mkdtempSync(join(tmpdir(), 'hw-launcher-assets-'));
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, 'CML-BasePack-v1.zip'), Buffer.from('PK-test'));
+  writeFileSync(join(dir, 'CML-Base-Resources-v1.zip'), Buffer.from('PK-test'));
   return dir;
 }
 
@@ -45,9 +45,15 @@ test('launcher feed serves public read-only JSON', async t => {
   assert.equal(page.status, 200);
   assert.match(await page.text(), /CodaLauncher Feed/);
 
-  const pack = await fetch(`http://127.0.0.1:${port}/assets/CML-BasePack-v1.zip`);
+  const pack = await fetch(`http://127.0.0.1:${port}/assets/CML-Base-Resources-v1.zip`);
   assert.equal(pack.status, 200);
   assert.equal(pack.headers.get('content-type'), 'application/zip');
+
+  const legacyPack = await fetch(`http://127.0.0.1:${port}/assets/CML-BasePack-v1.zip`);
+  assert.equal(legacyPack.status, 200);
+
+  const missing = await fetch(`http://127.0.0.1:${port}/assets/missing.zip`);
+  assert.equal(missing.status, 404);
 
   const post = await fetch(`http://127.0.0.1:${port}/api/news`, { method: 'POST' });
   assert.equal(post.status, 405);
