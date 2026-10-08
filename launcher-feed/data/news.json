@@ -1,54 +1,32 @@
 {
   "schema": 1,
-  "updated": "2026-10-08T00:30:00Z",
+  "updated": "2026-10-08T00:35:00Z",
   "items": [
-    {
-      "id": "play-prepares-mods",
-      "date": "2026-10-08",
-      "title": "Play now prepares missing or outdated official mods",
-      "text": "CodaLauncher's Play button now checks for missing or outdated official mods (CML Base Resources, HW Essentials) before starting Minecraft. If a mod is absent or its SHA-256 doesn't match the feed, it is downloaded and verified automatically. Requires CodaLoader 0.0.20+."
-    },
-    {
-      "id": "codaloader-0020",
-      "date": "2026-10-08",
-      "title": "CodaLoader 0.0.20 automatically bundles HW Essentials",
-      "text": "CodaLoader 0.0.20 fetches HW Essentials 0.2.0 from the HW-Mods repository at build time and embeds it in the CodaLoader JAR. The mod is installed automatically into the active game profile (including CodaLauncher-managed profiles) without manual steps. Target remains Minecraft Java 26.4 Snapshot 3, Java 25+ required. See the [CodaLoader 0.0.20 release](https://github.com/HowlingWhispers/HW-CodaLoader/releases/tag/v0.0.20)."
-    },
-    {
-      "id": "hw-essentials-020",
-      "date": "2026-10-08",
-      "title": "HW Essentials 0.2.0 adds /back",
-      "text": "HW Essentials 0.2.0 keeps /sethome, /home, /homes, /delhome and adds /back to return to your previous location after teleporting. Ten home slots by default (configurable 1–100 in config/hw_essentials/essentials.properties). Homes persist per world and player at cml/hw-essentials/homes/<uuid>.properties with atomic saves. Requires CodaLoader 0.0.20+. See the [HW Essentials 0.2.0 release](https://github.com/HowlingWhispers/HW-Mods/releases/tag/v0.2.0)."
-    },
     {
       "id": "codalauncher-060",
       "date": "2026-10-08",
-      "title": "CodaLauncher 0.6.0 — Windows, Linux, macOS",
-      "text": "CodaLauncher 0.6.0 is available for Windows (x64), Linux (x64 and ARM64), and macOS (Intel and Apple Silicon). The Mac build is not yet Apple-notarized; on first run you'll need to approve it in System Settings → Privacy & Security. On Linux and macOS, replacing the launcher binary must be done manually (no self-update). All platforms target Minecraft Java 26.4 Snapshot 3 and require Java 25+. See the [CodaLauncher 0.6.0 release](https://github.com/HowlingWhispers/CodaLauncher/releases/tag/v0.6.0)."
+      "title": "CodaLauncher is now available for Windows, Linux and macOS",
+      "text": "Download the new launcher and play on Windows (x64), Linux (x64/ARM64), or macOS (Intel/Apple Silicon). The Mac build isn't Apple-notarized yet — you'll need to approve it in System Settings → Privacy & Security on first run.",
+      "link": "https://github.com/HowlingWhispers/CodaLauncher/releases/tag/v0.6.0"
     },
     {
-      "id": "cml-packs-and-scenes",
+      "id": "hw-essentials-homes-back",
+      "date": "2026-10-08",
+      "title": "HW Essentials adds saved homes and /back — installed automatically",
+      "text": "Set homes with /sethome, list them with /homes, teleport with /home, and use /back to return to your last location. Ten home slots by default (configurable 1–100). Homes are saved per world and persist across sessions. Click Play in CodaLauncher — the mod installs itself.",
+      "link": "https://github.com/HowlingWhispers/HW-Mods/releases/tag/v0.2.0"
+    },
+    {
+      "id": "cml-packs-scenes",
       "date": "2026-10-07",
-      "title": "CML Packs and menu scenes arrive",
-      "text": "CodaLauncher now has Packs and Resourcepacks, starting with required CML Base and CML Base Resources. CodaLoader 0.0.17 also adds classic and experimental Banner Sweep menu scenes with random selection between title-menu visits."
+      "title": "Packs and menu scenes",
+      "text": "CodaLauncher now includes Packs and Resourcepacks (CML Base and CML Base Resources required). CodaLoader adds classic and experimental Banner Sweep menu scenes that rotate randomly on each title screen visit."
     },
     {
       "id": "codalauncher-begins",
       "date": "2026-10-07",
       "title": "CodaLauncher begins",
-      "text": "A dedicated Howling Whispers launcher is taking shape with news, updates, mods, profiles, settings and logs planned for one Coda-flavored home."
-    },
-    {
-      "id": "codaloader-0011",
-      "date": "2026-10-07",
-      "title": "CodaLoader 0.0.11",
-      "text": "The title-screen controls, custom music, Howling Whispers branding and Windows updater continue to settle into a cleaner CML experience."
-    },
-    {
-      "id": "identity-roadmap",
-      "date": "2026-10-07",
-      "title": "CML identity is on the roadmap",
-      "text": "Future CML accounts will separate Minecraft ownership proof from Howling Whispers identity, Discord linking and custom player profiles."
+      "text": "A dedicated Howling Whispers launcher is taking shape — news, updates, mods, profiles, settings and logs in one Coda-flavored home."
     }
   ]
 }
